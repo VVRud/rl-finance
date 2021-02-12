@@ -1,0 +1,54 @@
+query SeeAllContentPiecesQuery(
+  $count: Int!
+  $after: String
+  $contentTypes: [String]
+  $tagName: String
+) {
+  viewer {
+    me {
+      ...SeeAllContentPiecesPagination_me_dKpmx
+      id
+    }
+    id
+  }
+}
+
+fragment ContentPieceListRow_contentPiece on ContentPiece {
+  id
+  title
+  deepLink
+}
+
+fragment ContentPieceListRow_me on User {
+  authorization {
+    ...authorization_authorization
+  }
+}
+
+
+fragment SeeAllContentPiecesPagination_me_dKpmx on User {
+  contentPieces(first: $count, after: $after, contentPieceTypes: $contentTypes, tagName: $tagName) {
+    edges {
+      node {
+        id
+        ...ContentPieceListRow_contentPiece
+        __typename
+      }
+      cursor
+    }
+    pageInfo {
+      endCursor
+      hasNextPage
+    }
+  }
+  ...ContentPieceListRow_me
+}
+
+fragment authorization_authorization on Authorization {
+  roles {
+    isAnonymous
+    isTrialist
+    isPreviewing
+    hasPremiumSubscription
+  }
+}

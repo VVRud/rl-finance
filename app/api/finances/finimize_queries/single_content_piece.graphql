@@ -1,0 +1,166 @@
+query ContentPieceScreenQuery(
+  $contentPieceId: ID!
+) {
+  viewer {
+    me {
+      ...RelatedContentPiecesRow_me
+      ...ContentPieceWithChapters_me
+      ...ContentPieceWithBlocks_me
+      contentPiece(contentPieceId: $contentPieceId) {
+        id
+        hasBlocks
+        hasChapters
+        ...RelatedContentPiecesRow_contentPiece
+        ...ContentPieceWithChapters_contentPiece
+        ...ContentPieceWithBlocks_contentPiece
+      }
+      id
+    }
+    id
+  }
+}
+
+fragment ContentPieceBlock_block on ContentPieceBlock {
+  __typename
+  ... on TextBlock {
+    textMarkdown
+  }
+  ... on QuoteBlock {
+    caption
+    quote
+  }
+}
+
+fragment ContentPieceDetailsRow_contentPiece on ContentPiece {
+  dateUpdatedDisplay
+}
+
+fragment ContentPieceDownload_contentPiece on ContentPiece {
+  id
+  title
+  subtitle
+  hasChapters
+  hasBlocks
+  contentPieceType {
+    identifier
+  }
+  chapters {
+    id
+    hasBlocks
+  }
+}
+
+fragment ContentPieceDownload_me on User {
+  authorization {
+    ...authorization_authorization
+  }
+}
+
+fragment ContentPieceWithBlocks_contentPiece on ContentPiece {
+  id
+  title
+  subtitle
+  hasChapters
+  hasBlocks
+  contentPieceType {
+    trackingName
+  }
+  blocks {
+    __typename
+    ...ContentPieceBlock_block
+    ... on Node {
+      id
+    }
+  }
+  chapters {
+    title
+    subtitle
+    hasBlocks
+    deepLink
+    id
+    blocks {
+      __typename
+      ...ContentPieceBlock_block
+      ... on Node {
+        id
+      }
+    }
+  }
+  ...RelatedContentPiecesRow_contentPiece
+}
+
+fragment ContentPieceWithBlocks_me on User {
+  authorization {
+    ...authorization_authorization
+  }
+  hasPremiumSubscription
+  hasPreviouslyBoughtSubscription
+  ...RelatedContentPiecesRow_me
+}
+
+fragment ContentPieceWithChapters_contentPiece on ContentPiece {
+  id
+  title
+  subtitle
+  deepLink
+  summary
+  hasChapters
+  hasBlocks
+  contentPieceType {
+    trackingName
+  }
+  chapters {
+    id
+    title
+    subtitle
+    deepLink
+    hasBlocks
+  }
+  ...ContentPieceDetailsRow_contentPiece
+  ...RelatedContentPiecesRow_contentPiece
+  ...ContentPieceDownload_contentPiece
+}
+
+fragment ContentPieceWithChapters_me on User {
+  authorization {
+    ...authorization_authorization
+  }
+  hasPremiumSubscription
+  hasPreviouslyBoughtSubscription
+  ...RelatedContentPiecesRow_me
+  ...ContentPieceDownload_me
+}
+
+fragment HorizontalContentThumbnailScroll_contentPieces on ContentPiece {
+  id
+  title
+  subtitle
+  deepLink
+}
+
+fragment HorizontalContentThumbnailScroll_me on User {
+  authorization {
+    ...authorization_authorization
+  }
+}
+
+fragment RelatedContentPiecesRow_contentPiece on ContentPiece {
+  relatedContentPieces {
+    subtitle
+    ...HorizontalContentThumbnailScroll_contentPieces
+    id
+  }
+}
+
+fragment RelatedContentPiecesRow_me on User {
+  ...HorizontalContentThumbnailScroll_me
+}
+
+fragment authorization_authorization on Authorization {
+  roles {
+    isAnonymous
+    isTrialist
+    isPreviewing
+    hasPremiumSubscription
+  }
+}

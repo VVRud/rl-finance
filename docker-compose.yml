@@ -1,0 +1,201 @@
+version: '3.5'
+
+services:
+  redis:
+    container_name: redis
+    image: bitnami/redis
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    networks:
+      - internal_net
+    volumes: 
+      - 'redis_data:/bitnami/redis/data'
+    restart: always
+
+  rabbit:
+    container_name: rabbitmq
+    image: 'bitnami/rabbitmq:latest'
+    environment:
+      RABBITMQ_USERNAME: ${RABBIT_USERNAME}
+      RABBITMQ_PASSWORD: ${RABBIT_PASSWORD}
+    networks:
+      - internal_net
+    ports:
+      - "15672:15672"
+    volumes:
+      - 'rabbitmq_data:/bitnami'
+    restart: always
+
+  postgres:
+    container_name: postgresql
+    image: bitnami/postgresql:latest
+    environment:
+      POSTGRESQL_POSTGRES_PASSWORD: ${POSTGRES_ROOT_PASSWORD}
+      POSTGRESQL_USERNAME: ${POSTGRES_USERNAME}
+      POSTGRESQL_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRESQL_DATABASE: ${POSTGRES_DATABASE}
+    networks:
+      - internal_net
+    volumes:
+      - 'postgresql_data:/var/lib/postgresql/data'
+      - './init_tables.sql:/docker-entrypoint-initdb.d/init_tables.sql'
+    restart: always
+
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: database@finances.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    networks:
+      - internal_net
+    ports:
+      - '8080:80'
+    restart: always
+
+  mongo:
+    container_name: mongodb
+    image: bitnami/mongodb:latest
+    environment:
+      MONGODB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      MONGODB_USERNAME: ${MONGO_USERNAME}
+      MONGODB_PASSWORD: ${MONGO_PASSWORD}
+      MONGODB_DATABASE: ${MONGO_DATABASE}
+    networks:
+      - internal_net
+    volumes:
+      - 'mongodb_data:/data/db'
+    restart: always
+
+  mongoadmin:
+    image: mongoclient/mongoclient:latest
+    container_name: mongoclient
+    networks:
+      - internal_net
+    ports:
+      - 3300:3000
+
+  worker:
+    container_name: celery_worker
+    build:
+      context: ./app
+      dockerfile: Dockerfile.celery-worker
+    environment:
+      AV_APIKEY: ${AV_APIKEY}
+      FH_APIKEY: ${FH_APIKEY}
+
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USERNAME: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DATABASE: ${POSTGRES_DATABASE}
+
+      MONGO_HOST: mongo
+      MONGO_PORT: 27017
+      MONGO_USERNAME: ${MONGO_USERNAME}
+      MONGO_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_DATABASE: ${MONGO_DATABASE}
+
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+      RABBIT_HOST: rabbit
+      RABBIT_PORT: 5672
+      RABBIT_USERNAME: ${RABBIT_USERNAME}
+      RABBIT_PASSWORD: ${RABBIT_PASSWORD}
+    networks:
+      - internal_net
+    depends_on:
+      - redis
+      - rabbit
+      - mongo
+      - postgres
+    restart: always
+
+  beat:
+    container_name: celery_beat
+    build:
+      context: ./app
+      dockerfile: Dockerfile.celery-beat
+    environment:
+      AV_APIKEY: ${AV_APIKEY}
+      FH_APIKEY: ${FH_APIKEY}
+
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USERNAME: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DATABASE: ${POSTGRES_DATABASE}
+
+      MONGO_HOST: mongo
+      MONGO_PORT: 27017
+      MONGO_USERNAME: ${MONGO_USERNAME}
+      MONGO_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_DATABASE: ${MONGO_DATABASE}
+
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+      RABBIT_HOST: rabbit
+      RABBIT_PORT: 5672
+      RABBIT_USERNAME: ${RABBIT_USERNAME}
+      RABBIT_PASSWORD: ${RABBIT_PASSWORD}
+    networks:
+      - internal_net
+    depends_on:
+      - worker
+    restart: always
+  
+  api:
+    container_name: rl_finance_api
+    build:
+      context: ./app
+      dockerfile: Dockerfile.api
+    environment:
+      LOG_LEVEL: debug
+      MAX_WORKERS: 4
+      AV_APIKEY: ${AV_APIKEY}
+      FH_APIKEY: ${FH_APIKEY}
+
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USERNAME: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DATABASE: ${POSTGRES_DATABASE}
+
+      MONGO_HOST: mongo
+      MONGO_PORT: 27017
+      MONGO_USERNAME: ${MONGO_USERNAME}
+      MONGO_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_DATABASE: ${MONGO_DATABASE}
+
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+      RABBIT_HOST: rabbit
+      RABBIT_PORT: 5672
+      RABBIT_USERNAME: ${RABBIT_USERNAME}
+      RABBIT_PASSWORD: ${RABBIT_PASSWORD}
+    networks:
+      - internal_net
+    ports:
+      - '8090:80'
+    depends_on:
+      - redis
+      - postgres
+      - mongo
+      - worker
+    restart: always
+
+volumes:
+  redis_data: null
+  postgresql_data: null
+  mongodb_data: null
+  rabbitmq_data: null
+
+networks:
+  internal_net:
+    driver: bridge

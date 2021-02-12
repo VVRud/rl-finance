@@ -1,0 +1,10 @@
+gql[all]>=3.0.0a4
+aiohttp
+sqlalchemy
+databases[postgresql]
+redis
+certifi
+motor
+python-snappy
+python-dateutil
+celery[all]
