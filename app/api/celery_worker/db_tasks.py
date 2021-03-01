@@ -13,7 +13,7 @@ class PostgresTask(Task):
             try:
                 await pg_db.connect()
             except AssertionError as e:
-                logger.warning("Is connected. Skipping.", e)
+                logger.warning(f"Is connected. Skipping. {str(e)}")
             finally:
                 self._db = pg_db
         return self._db
