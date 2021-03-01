@@ -16,7 +16,7 @@ class AlphaVantage(Throttler):
             )
 
         super(AlphaVantage, self).__init__([
-            Limit(5, 60, 1, "av_1"), Limit(500, 86400, 1800, "av_2")
+            Limit(5, 60, 1, "av:short"), Limit(500, 86400, 1800, "av:long")
         ])
 
         self.intervals = [

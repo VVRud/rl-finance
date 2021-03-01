@@ -5,6 +5,7 @@ gql[all]>=3.0.0a4
 sqlalchemy
 databases[postgresql]
 certifi
+python-snappy
 python-dateutil
 celery-pool-asyncio
 async_property

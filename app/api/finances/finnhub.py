@@ -15,7 +15,7 @@ class FinnHub(Throttler):
             )
 
         super(FinnHub, self).__init__([
-            Limit(30, 1, 0.1, "fh_1"), Limit(60, 60, 1, "fh_2")
+            Limit(30, 1, 0.1, "fh:short"), Limit(60, 60, 1, "fh:long")
         ])
 
     async def __get_financials(self, params):

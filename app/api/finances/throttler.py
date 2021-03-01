@@ -12,8 +12,7 @@ class Limit():
         self.period = period
         self.retry = retry
         self.redis = Redis(
-            host=getenv("REDIS_HOST"), port=getenv("REDIS_PORT"),
-            password=getenv("REDIS_PASSWORD"), db=1
+            host=getenv("REDIS_HOST"), port=getenv("REDIS_PORT"), db=1
         )
         self.key = key
 

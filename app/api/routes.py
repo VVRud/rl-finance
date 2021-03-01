@@ -24,7 +24,6 @@ async def status():
     }
 
 
-# TODO replace with POST
 @router.get(
     "/add_symbol",
     summary="Add symbol to the API.",
@@ -80,7 +79,10 @@ async def add_symbol(
 #     return profile
 
 
-@router.get("/get_companies")
+@router.get(
+    "/get_companies",
+    summary="Get all the companies added to Database."
+)
 async def get_companies():
     return await pg_db.get_companies()
 

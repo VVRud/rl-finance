@@ -23,7 +23,7 @@ class Finimize(Throttler):
         self.client = Client(transport=self.transport)
 
         super(Finimize, self).__init__([
-            Limit(30, 60, 1, "fm_1"), Limit(1000, 86400, 1800, "fm_2")
+            Limit(30, 60, 1, "fm:short"), Limit(1000, 86400, 1800, "fm:long")
         ])
 
         self.content_types = [

@@ -3,78 +3,58 @@ version: '3.5'
 services:
   redis:
     container_name: redis
-    image: bitnami/redis
+    image: redis:alpine
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     networks:
       - internal_net
     volumes: 
-      - 'redis_data:/bitnami/redis/data'
+      - 'redis_data:/data'
     restart: always
 
   rabbit:
     container_name: rabbitmq
-    image: 'bitnami/rabbitmq:latest'
+    image: 'rabbitmq:alpine'
     environment:
-      RABBITMQ_USERNAME: ${RABBIT_USERNAME}
-      RABBITMQ_PASSWORD: ${RABBIT_PASSWORD}
+      RABBITMQ_DEFAULT_USER: ${RABBIT_USERNAME}
+      RABBITMQ_DEFAULT_PASS: ${RABBIT_PASSWORD}
     networks:
       - internal_net
     ports:
       - "15672:15672"
     volumes:
-      - 'rabbitmq_data:/bitnami'
+      - 'rabbitmq_data:/var/lib/rabbitmq'
     restart: always
 
   postgres:
     container_name: postgresql
-    image: bitnami/postgresql:latest
+    image: postgres:alpine
     environment:
-      POSTGRESQL_POSTGRES_PASSWORD: ${POSTGRES_ROOT_PASSWORD}
-      POSTGRESQL_USERNAME: ${POSTGRES_USERNAME}
-      POSTGRESQL_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRESQL_DATABASE: ${POSTGRES_DATABASE}
+      POSTGRES_USER: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DATABASE}
     networks:
       - internal_net
     volumes:
       - 'postgresql_data:/var/lib/postgresql/data'
-      - './init_tables.sql:/docker-entrypoint-initdb.d/init_tables.sql'
-    restart: always
-
-  pgadmin:
-    container_name: pgadmin
-    image: dpage/pgadmin4:latest
-    environment:
-      PGADMIN_DEFAULT_EMAIL: database@finances.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-    networks:
-      - internal_net
-    ports:
-      - '8080:80'
+      - './init_postgres.sql:/docker-entrypoint-initdb.d/init_postgres.sql'
     restart: always
 
   mongo:
     container_name: mongodb
-    image: bitnami/mongodb:latest
+    image: mongo:latest
     environment:
-      MONGODB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
-      MONGODB_USERNAME: ${MONGO_USERNAME}
-      MONGODB_PASSWORD: ${MONGO_PASSWORD}
-      MONGODB_DATABASE: ${MONGO_DATABASE}
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
+      MONGO_INITDB_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_PASSWORD: ${MONGO_PASSWORD}
     networks:
       - internal_net
     volumes:
       - 'mongodb_data:/data/db'
+      - './init_mongo.sh:/docker-entrypoint-initdb.d/init_mongo.sh'
     restart: always
-
-  mongoadmin:
-    image: mongoclient/mongoclient:latest
-    container_name: mongoclient
-    networks:
-      - internal_net
-    ports:
-      - 3300:3000
-
   worker:
     container_name: celery_worker
     build:
@@ -136,7 +116,6 @@ services:
 
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
 
       RABBIT_HOST: rabbit
       RABBIT_PORT: 5672
