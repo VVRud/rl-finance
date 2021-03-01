@@ -1,6 +1,6 @@
 FROM python:3.7
 
-RUN apt-get update && apt-get install libsnappy-dev -y
+RUN apt-get update && apt-get upgrade -y && apt-get install libsnappy-dev -y
 
 COPY requirements.celery.txt /requirements.txt
 RUN pip install -r /requirements.txt
