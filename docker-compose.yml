@@ -134,8 +134,8 @@ services:
       context: ./app
       dockerfile: Dockerfile.api
     environment:
-      LOG_LEVEL: debug
-      MAX_WORKERS: 4
+      LOG_LEVEL: warning
+      MAX_WORKERS: 2
       AV_APIKEY: ${AV_APIKEY}
       FH_APIKEY: ${FH_APIKEY}
 
