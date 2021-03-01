@@ -139,12 +139,6 @@ CREATE TABLE "monthly_prices" (
   "volume" bigint NOT NULL
 );
 
-ALTER TABLE "balance_sheet" ADD FOREIGN KEY ("c_id") REFERENCES "companies" ("id");
-
-ALTER TABLE "income_statement" ADD FOREIGN KEY ("c_id") REFERENCES "companies" ("id");
-
-ALTER TABLE "cash_flow" ADD FOREIGN KEY ("c_id") REFERENCES "companies" ("id");
-
 ALTER TABLE "sec_sentiment" ADD FOREIGN KEY ("c_id") REFERENCES "companies" ("id");
 
 ALTER TABLE "sec_similarity" ADD FOREIGN KEY ("c_id") REFERENCES "companies" ("id");
