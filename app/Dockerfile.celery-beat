@@ -8,4 +8,4 @@ RUN pip install -r /requirements.txt
 COPY ./api /api
 WORKDIR /api
 
-ENTRYPOINT celery -A celery_worker.worker beat --scheduler celery_pool_asyncio:PersistentScheduler
+ENTRYPOINT sleep 10 && celery -A celery_worker.worker beat --scheduler celery_pool_asyncio:PersistentScheduler
