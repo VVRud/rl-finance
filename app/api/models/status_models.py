@@ -22,6 +22,5 @@ class RateLimitsModel(BaseModel):
 class StatusModel(BaseModel):
     postgres: PostgresModel
     mongo: MongoModel
-    alphavantage: List[RateLimitsModel]
     finnhub: List[RateLimitsModel]
     finimize: List[RateLimitsModel]

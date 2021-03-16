@@ -1,5 +1,7 @@
 FROM python:3.7
 
+ENV LOG_LEVEL=WARNING
+
 RUN apt-get update && apt-get upgrade -y && apt-get install libsnappy-dev -y
 
 COPY requirements.celery.txt /requirements.txt
@@ -8,4 +10,4 @@ RUN pip install -r /requirements.txt
 COPY ./api /api
 WORKDIR /api
 
-ENTRYPOINT sleep 10 && celery -A celery_worker.worker worker -l WARNING -E -P celery_pool_asyncio:TaskPool
+ENTRYPOINT sleep 10 && celery -A celery_worker.worker worker -l ${LOG_LEVEL} -E -P celery_pool_asyncio:TaskPool

@@ -2,9 +2,9 @@ from fastapi import APIRouter, Query, BackgroundTasks
 
 from models import StatusModel
 from db import pg_db, mongo_db
-from finances import av, fh, fm
+from finances import fh, fm
 
-from background_tasks import add_tasks
+from background_tasks import add_company_tasks, add_crypto_tasks
 
 router = APIRouter()
 
@@ -18,18 +18,17 @@ async def status():
     return {
         "postgres": pg_db.get_status(),
         "mongo": mongo_db.get_status(),
-        "alphavantage": av.get_status(),
         "finnhub": fh.get_status(),
         "finimize": fm.get_status()
     }
 
 
 @router.get(
-    "/add_symbol",
-    summary="Add symbol to the API.",
+    "/add_stock_symbol",
+    summary="Add stocks symbol to the database.",
     description="Adds symbol to the database and collects info (in background)"
 )
-async def add_symbol(
+async def add_stock_symbol(
     background_tasks: BackgroundTasks,
     symbol: str = Query(
         ..., title="Symbol of the company",
@@ -38,10 +37,30 @@ async def add_symbol(
 ):
     profile = await fh.get_profile(symbol)
     if profile["symbol"] == symbol:
-        background_tasks.add_task(add_tasks, symbol=symbol, profile=profile)
+        background_tasks.add_task(add_company_tasks, symbol=symbol, profile=profile)
         return profile
     else:
         return {"error": True}
+
+
+@router.get(
+    "/add_crypto_symbol",
+    summary="Add crypto symbol to the database.",
+    description="Adds symbol to the database and collects info (in background)"
+)
+async def add_crypto_symbol(
+    background_tasks: BackgroundTasks,
+    symbol: str = Query(
+        ..., title="Symbol of the cryptocurrency",
+        description="Symbol to be added to the database."
+    )
+):
+    profiles = await fh.get_crypto_symbols(symbol.split(":")[0])
+    for profile in profiles:
+        if profile["symbol"] == symbol:
+            background_tasks.add_task(add_crypto_tasks, symbol=symbol, profile=profile)
+            return profile
+    return {"error": True}
 
 
 # @router.get(
@@ -85,6 +104,14 @@ async def add_symbol(
 )
 async def get_companies():
     return await pg_db.get_companies()
+
+
+@router.get(
+    "/get_cryptos",
+    summary="Get all the cryptocurrencies added to Database."
+)
+async def get_cryptos():
+    return await pg_db.get_cryptos()
 
 
 # @router.get("/get_symbol_info/{symbol}")

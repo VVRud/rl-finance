@@ -1,11 +1,12 @@
 import os
 from typing import List
 from databases import Database
-from sqlalchemy import desc
+from sqlalchemy import desc, and_
 from .pg_tables import (
     companies, dividends, sec_sentiment, sec_similarity,
-    daily_prices, weekly_prices, monthly_prices, intraday_prices_1min,
-    intraday_prices_5min, intraday_prices_15min, intraday_prices_30min, intraday_prices_60min,
+    stocks_candles, splits,
+    trends, eps_estimates, eps_surprises, upgrades_downgrades, revenue_estimates, earnings_calendars,
+    crypto, crypto_candles
 )
 
 
@@ -24,161 +25,233 @@ class PgCrud(Database):
             "connected": self.is_connected
         }
 
-    def __get_intraday_table(self, interval: str):
-        if interval == "1min":
-            table = intraday_prices_1min
-        elif interval == "5min":
-            table = intraday_prices_5min
-        elif interval == "15min":
-            table = intraday_prices_15min
-        elif interval == "30min":
-            table = intraday_prices_30min
-        elif interval == "60min":
-            table = intraday_prices_60min
-        else:
-            raise ValueError(f"Unknown interval {interval}")
-        return table
-
-    async def get_id(self, symbol: str):
-        _id = [
-            company.id
-            for company in await self.get_companies()
-            if company.symbol == symbol
-        ]
-        return _id[0]
+    def mappings_to_dicts(self, values: list):
+        return [dict(v) for v in values]
 
     # INSERT VALUES
-    # Alpha Vantage
-    async def insert_daily(self, values: List[dict]):
-        async with self.transaction():
-            query = daily_prices.insert()
-            t_id = await self.execute_many(query, values)
-        return t_id
-
-    async def insert_weekly(self, values: List[dict]):
-        async with self.transaction():
-            query = weekly_prices.insert()
-            t_id = await self.execute_many(query, values)
-        return t_id
-
-    async def insert_monthly(self, values: List[dict]):
-        async with self.transaction():
-            query = monthly_prices.insert()
-            t_id = await self.execute_many(query, values)
-        return t_id
-
-    async def insert_intraday(self, values: List[dict], interval: str):
-        async with self.transaction():
-            query = self.__get_intraday_table(interval).insert()
-            t_id = await self.execute_many(query, values)
-        return t_id
-
-    # Finnhub
     async def insert_company(self, values: dict):
         async with self.transaction():
             query = companies.insert()
             c_id = await self.execute(query, values)
         return c_id
 
+    async def insert_dividends(self, values: List[dict]):
+        async with self.transaction():
+            query = dividends.insert()
+            await self.execute_many(query, values)
+
     async def insert_sec_sentiment(self, values: List[dict]):
         async with self.transaction():
             query = sec_sentiment.insert()
-            r_id = await self.execute_many(query, values)
-        return r_id
+            await self.execute_many(query, values)
 
     async def insert_sec_similarity(self, values: List[dict]):
         async with self.transaction():
             query = sec_similarity.insert()
-            r_id = await self.execute_many(query, values)
-        return r_id
+            await self.execute_many(query, values)
 
-    async def insert_dividends(self, values: List[dict]):
+    async def insert_stock_candles(self, values: List[dict]):
         async with self.transaction():
-            query = dividends.insert()
-            r_id = await self.execute_many(query, values)
-        return r_id
+            query = stocks_candles.insert()
+            await self.execute_many(query, values)
+
+    async def insert_splits(self, values: List[dict]):
+        async with self.transaction():
+            query = splits.insert()
+            await self.execute_many(query, values)
+
+    async def insert_trends(self, values: List[dict]):
+        async with self.transaction():
+            query = trends.insert()
+            await self.execute_many(query, values)
+
+    async def insert_eps_estimates(self, values: List[dict]):
+        async with self.transaction():
+            query = eps_estimates.insert()
+            await self.execute_many(query, values)
+
+    async def insert_eps_surprises(self, values: List[dict]):
+        async with self.transaction():
+            query = eps_surprises.insert()
+            await self.execute_many(query, values)
+
+    async def insert_upgrades_downgrades(self, values: List[dict]):
+        async with self.transaction():
+            query = upgrades_downgrades.insert()
+            await self.execute_many(query, values)
+
+    async def insert_revenue_estimates(self, values: List[dict]):
+        async with self.transaction():
+            query = revenue_estimates.insert()
+            await self.execute_many(query, values)
+
+    async def insert_earnings_calendars(self, values: List[dict]):
+        async with self.transaction():
+            query = earnings_calendars.insert()
+            await self.execute_many(query, values)
+
+    async def insert_crypto(self, values: dict):
+        async with self.transaction():
+            query = crypto.insert()
+            c_id = await self.execute(query, values)
+        return c_id
+
+    async def insert_crypto_candles(self, values: List[dict]):
+        async with self.transaction():
+            query = crypto_candles.insert()
+            await self.execute_many(query, values)
 
     # GET VALUES
-    # Alpha Vantage
-    async def get_intraday(self, symbol: str, interval: str, limit: int = 100, offset: int = None):
-        _id = await self.get_id(symbol)
-        table = self.__get_intraday_table(interval)
-        query = table.select(
-            whereclause=(table.c.c_id == _id),
-            order_by=desc(table.c.date_time),
-            limit=limit, offset=offset
-        )
-        rows = await self.fetch_all(query=query)
-        return rows
-
-    async def get_daily(self, symbol: str, limit: int = 100, offset: int = None):
-        _id = await self.get_id(symbol)
-        query = daily_prices.select(
-            whereclause=(daily_prices.c.c_id == _id),
-            order_by=desc(daily_prices.c.date),
-            limit=limit, offset=offset
-        )
-        rows = await self.fetch_all(query=query)
-        return rows
-
-    async def get_weekly(self, symbol: str, limit: int = 100, offset: int = None):
-        _id = await self.get_id(symbol)
-        query = weekly_prices.select(
-            whereclause=(weekly_prices.c.c_id == _id),
-            order_by=desc(weekly_prices.c.date),
-            limit=limit, offset=offset
-        )
-        rows = await self.fetch_all(query=query)
-        return rows
-
-    async def get_monthly(self, symbol: str, limit: int = 100, offset: int = None):
-        _id = await self.get_id(symbol)
-        query = monthly_prices.select(
-            whereclause=(monthly_prices.c.c_id == _id),
-            order_by=desc(monthly_prices.c.date),
-            limit=limit, offset=offset
-        )
-        rows = await self.fetch_all(query=query)
-        return rows
-
-    # Finnhub
     async def get_company(self, symbol: str):
         query = companies.select(
             whereclause=(companies.c.symbol == symbol)
         )
         row = await self.fetch_one(query)
+        if row is not None:
+            return dict(row)
         return row
 
     async def get_companies(self):
         query = companies.select()
-        return await self.fetch_all(query)
-
-    async def get_sec_sentiments(self, symbol: str, limit: int = 100, offset: int = None):
-        _id = await self.get_id(symbol)
-        query = sec_sentiment.select(
-            whereclause=(sec_sentiment.c.c_id == _id),
-            order_by=desc(sec_sentiment.c.date),
-            limit=limit, offset=offset
-        )
-        rows = await self.fetch_all(query=query)
-        return rows
-
-    async def get_sec_similarities(self, symbol: str, limit: int = 100, offset: int = None):
-        _id = await self.get_id(symbol)
-        query = sec_similarity.select(
-            whereclause=(sec_similarity.c.c_id == _id),
-            order_by=desc(sec_similarity.c.date),
-            limit=limit, offset=offset
-        )
-        rows = await self.fetch_all(query=query)
-        return rows
+        rows = await self.fetch_all(query)
+        return self.mappings_to_dicts(rows)
 
     async def get_dividends(self, symbol: str, limit: int = 100, offset: int = None):
-        _id = await self.get_id(symbol)
+        _id = (await self.get_company(symbol))["id"]
         query = dividends.select(
             whereclause=(dividends.c.c_id == _id),
             order_by=desc(dividends.c.date),
             limit=limit, offset=offset
         )
         rows = await self.fetch_all(query=query)
-        return rows
+        return self.mappings_to_dicts(rows)
+
+    async def get_sec_sentiments(self, symbol: str, limit: int = 100, offset: int = None):
+        _id = (await self.get_company(symbol))["id"]
+        query = sec_sentiment.select(
+            whereclause=(sec_sentiment.c.c_id == _id),
+            order_by=desc(sec_sentiment.c.date),
+            limit=limit, offset=offset
+        )
+        rows = await self.fetch_all(query=query)
+        return self.mappings_to_dicts(rows)
+
+    async def get_sec_similarities(self, symbol: str, limit: int = 100, offset: int = None):
+        _id = (await self.get_company(symbol))["id"]
+        query = sec_similarity.select(
+            whereclause=(sec_similarity.c.c_id == _id),
+            order_by=desc(sec_similarity.c.date),
+            limit=limit, offset=offset
+        )
+        rows = await self.fetch_all(query=query)
+        return self.mappings_to_dicts(rows)
+
+    async def get_stocks_candles(self, symbol: str, resolution: str, limit: int = 100, offset: int = None):
+        _id = (await self.get_company(symbol))["id"]
+        query = stocks_candles.select(
+            whereclause=and_(
+                stocks_candles.c.c_id == _id,
+                stocks_candles.c.resolution == resolution
+            ),
+            order_by=desc(stocks_candles.c.date),
+            limit=limit, offset=offset
+        )
+        rows = await self.fetch_all(query=query)
+        return self.mappings_to_dicts(rows)
+
+    async def get_splits(self, symbol: str, limit: int = 100, offset: int = None):
+        _id = (await self.get_company(symbol))["id"]
+        query = splits.select(
+            whereclause=(splits.c.c_id == _id),
+            order_by=desc(splits.c.date),
+            limit=limit, offset=offset
+        )
+        rows = await self.fetch_all(query=query)
+        return self.mappings_to_dicts(rows)
+
+    async def get_trends(self, symbol: str, limit: int = 100, offset: int = None):
+        _id = (await self.get_company(symbol))["id"]
+        query = trends.select(
+            whereclause=(trends.c.c_id == _id),
+            order_by=desc(trends.c.date),
+            limit=limit, offset=offset
+        )
+        rows = await self.fetch_all(query=query)
+        return self.mappings_to_dicts(rows)
+
+    async def get_eps_estimates(self, symbol: str, limit: int = 100, offset: int = None):
+        _id = (await self.get_company(symbol))["id"]
+        query = eps_estimates.select(
+            whereclause=(eps_estimates.c.c_id == _id),
+            order_by=desc(eps_estimates.c.date),
+            limit=limit, offset=offset
+        )
+        rows = await self.fetch_all(query=query)
+        return self.mappings_to_dicts(rows)
+
+    async def get_eps_surprises(self, symbol: str, limit: int = 100, offset: int = None):
+        _id = (await self.get_company(symbol))["id"]
+        query = eps_surprises.select(
+            whereclause=(eps_surprises.c.c_id == _id),
+            order_by=desc(eps_surprises.c.date),
+            limit=limit, offset=offset
+        )
+        rows = await self.fetch_all(query=query)
+        return self.mappings_to_dicts(rows)
+
+    async def get_upgrades_downgrades(self, symbol: str, limit: int = 100, offset: int = None):
+        _id = (await self.get_company(symbol))["id"]
+        query = upgrades_downgrades.select(
+            whereclause=(upgrades_downgrades.c.c_id == _id),
+            order_by=desc(upgrades_downgrades.c.date),
+            limit=limit, offset=offset
+        )
+        rows = await self.fetch_all(query=query)
+        return self.mappings_to_dicts(rows)
+
+    async def get_revenue_estimates(self, symbol: str, limit: int = 100, offset: int = None):
+        _id = (await self.get_company(symbol))["id"]
+        query = revenue_estimates.select(
+            whereclause=(revenue_estimates.c.c_id == _id),
+            order_by=desc(revenue_estimates.c.date),
+            limit=limit, offset=offset
+        )
+        rows = await self.fetch_all(query=query)
+        return self.mappings_to_dicts(rows)
+
+    async def get_earnings_calendars(self, symbol: str, limit: int = 100, offset: int = None):
+        _id = (await self.get_company(symbol))["id"]
+        query = earnings_calendars.select(
+            whereclause=(earnings_calendars.c.c_id == _id),
+            order_by=desc(earnings_calendars.c.date),
+            limit=limit, offset=offset
+        )
+        rows = await self.fetch_all(query=query)
+        return self.mappings_to_dicts(rows)
+
+    async def get_crypto(self, symbol: str):
+        query = crypto.select(
+            whereclause=(crypto.c.symbol == symbol)
+        )
+        row = await self.fetch_one(query)
+        if row is not None:
+            return dict(row)
+        return row
+
+    async def get_cryptos(self):
+        query = crypto.select()
+        rows = await self.fetch_all(query)
+        return self.mappings_to_dicts(rows)
+
+    async def get_crypto_candles(self, symbol: str, resolution: str, limit: int = 100, offset: int = None):
+        _id = (await self.get_company(symbol))["id"]
+        query = crypto_candles.select(
+            whereclause=and_(
+                crypto_candles.c.c_id == _id,
+                crypto_candles.c.resolution == resolution
+            ),
+            order_by=desc(crypto_candles.c.date),
+            limit=limit, offset=offset
+        )
+        rows = await self.fetch_all(query=query)
+        return self.mappings_to_dicts(rows)

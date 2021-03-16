@@ -62,7 +62,8 @@ services:
       context: ./app
       dockerfile: Dockerfile.celery-worker
     environment:
-      AV_APIKEY: ${AV_APIKEY}
+      LOG_LEVEL: INFO
+      C_FORCE_ROOT: "true"
       FH_APIKEY: ${FH_APIKEY}
 
       POSTGRES_HOST: postgres
@@ -100,7 +101,8 @@ services:
       context: ./app
       dockerfile: Dockerfile.celery-beat
     environment:
-      AV_APIKEY: ${AV_APIKEY}
+      LOG_LEVEL: INFO
+      C_FORCE_ROOT: "true"
       FH_APIKEY: ${FH_APIKEY}
 
       POSTGRES_HOST: postgres
@@ -134,9 +136,8 @@ services:
       context: ./app
       dockerfile: Dockerfile.api
     environment:
-      LOG_LEVEL: warning
+      LOG_LEVEL: info
       MAX_WORKERS: 2
-      AV_APIKEY: ${AV_APIKEY}
       FH_APIKEY: ${FH_APIKEY}
 
       POSTGRES_HOST: postgres

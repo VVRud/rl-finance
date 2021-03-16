@@ -70,71 +70,71 @@ class MongoCrud(AsyncIOMotorClient):
 
     # RETRIEVE
     async def get_prs(self, symbol: str, limit: int = 10, offset: int = 0):
-        result = (
+        result = await (
             self.prs_collection
             .find({"symbol": symbol})
             .sort("date_time", pymongo.DESCENDING)
             .skip(offset).limit(limit)
-            .to_list()
+            .to_list(None)
         )
         return result
 
     async def get_cash_flows(self, symbol: str = None, limit: int = 10, offset: int = 0):
-        result = (
+        result = await (
             self.cf_collection
             .find({"symbol": symbol})
             .sort("dateUpdatedDisplay", pymongo.DESCENDING)
             .skip(offset).limit(limit)
-            .to_list()
+            .to_list(None)
         )
         return result
 
     async def get_income_statements(self, symbol: str = None, limit: int = 10, offset: int = 0):
-        result = (
+        result = await (
             self.is_collection
             .find({"symbol": symbol})
             .sort("dateUpdatedDisplay", pymongo.DESCENDING)
             .skip(offset).limit(limit)
-            .to_list()
+            .to_list(None)
         )
         return result
 
     async def get_balance_sheets(self, symbol: str = None, limit: int = 10, offset: int = 0):
-        result = (
+        result = await (
             self.bs_collection
             .find({"symbol": symbol})
             .sort("dateUpdatedDisplay", pymongo.DESCENDING)
             .skip(offset).limit(limit)
-            .to_list()
+            .to_list(None)
         )
         return result
 
     async def get_insights(self, _type: str = None, limit: int = 10, offset: int = 0):
-        result = (
+        result = await (
             self.insights_collection
             .find({"contentPieceType": {"identifier": "INSIGHT"}})
             .sort("dateUpdatedDisplay", pymongo.DESCENDING)
             .skip(offset).limit(limit)
-            .to_list()
+            .to_list(None)
         )
         return result
 
     async def get_briefs(self, _type: str = None, limit: int = 10, offset: int = 0):
-        result = (
+        result = await (
             self.insights_collection
             .find({"contentPieceType": {"identifier": "DAILY_BRIEF"}})
             .sort("dateUpdatedDisplay", pymongo.DESCENDING)
             .skip(offset).limit(limit)
-            .to_list()
+            .to_list(None)
         )
         return result
 
     async def get_other(self, _type: str = None, limit: int = 10, offset: int = 0):
-        result = (
+        result = await (
             self.other_collection
             .find({"contentPieceType": {"identifier": "OTHER"}})
             .sort("dateUpdatedDisplay", pymongo.DESCENDING)
             .skip(offset).limit(limit)
-            .to_list()
+            .to_list(None)
         )
         return result

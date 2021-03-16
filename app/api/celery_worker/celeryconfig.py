@@ -15,6 +15,8 @@ class CeleryConfig:
     task_acks_late = True
     task_acks_on_failure_or_timeout = False
     task_track_started = True
+    task_serializer = "pickle"
+    accept_content = ["pickle"]
 
     beat_schedule = {
         "update_daily": {

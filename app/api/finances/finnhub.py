@@ -14,10 +14,13 @@ class FinnHub(Throttler):
                 " Set it into `.env` file as `FH_APIKEY`."
             )
 
+        self.resolutions = ["1", "5", "15", "30", "60", "D", "W", "M"]
+
         super(FinnHub, self).__init__([
-            Limit(30, 1, 0.1, "fh:short"), Limit(60, 60, 1, "fh:long")
+            Limit(30, 1, 0.1, "fh:short"), Limit(150, 60, 1, "fh:long")
         ])
 
+    # Fundamentals
     async def __get_financials(self, params):
         path = "/stock/financials"
         result = []
@@ -33,7 +36,7 @@ class FinnHub(Throttler):
         return result
 
     async def get_profile(self, symbol: str) -> dict:
-        path = "/stock/profile2"
+        path = "/stock/profile"
         params = {
             "symbol": symbol,
             "token": self.apikey
@@ -42,18 +45,37 @@ class FinnHub(Throttler):
         async with await self.make_request("GET", self.url + path, params=params) as response:
             data = await response.json()
             result = {
+                "name": data["name"],
                 "symbol": data["ticker"],
+
+                "state": data["state"],
                 "country": data["country"],
+                "city": data["city"],
+                "address": data["address"],
+
                 "exchange": data["exchange"],
-                "ipo": datetime.date.fromisoformat(data["ipo"]),
+                "ipo": datetime.datetime.fromisoformat(data["ipo"]),
                 "share_outstanding": data["shareOutstanding"],
                 "market_capitalization": data["marketCapitalization"],
-                "industry": data["finnhubIndustry"]
+                "employeeTotal": int(float(data["employeeTotal"])),
+
+                "ggroup": data["ggroup"],
+                "gind": data["gind"],
+                "gsector": data["gsector"],
+                "gsubind": data["gsubind"],
+
+                "naicsNationalIndustry": data["naicsNationalIndustry"],
+                "naics": data["naics"],
+                "naicsSector": data["naicsSector"],
+                "naicsSubsector": data["naicsSubsector"],
+
+                "description": data["description"],
+                "finnhubIndustry": data["finnhubIndustry"]
             }
 
         return result
 
-    async def get_press_releases(self, symbol: str, _from: str, _to: str) -> list:
+    async def get_press_releases(self, symbol: str, _from: datetime.datetime, _to: datetime.datetime) -> list:
         def cleanup_chunk(chunk):
             try:
                 res = {
@@ -75,8 +97,8 @@ class FinnHub(Throttler):
         path = "/press-releases"
         params = {
             "symbol": symbol,
-            "from": _from,
-            "to": _to,
+            "from": _from.date().isoformat(),
+            "to": _to.date().isoformat(),
             "token": self.apikey
         }
 
@@ -110,12 +132,12 @@ class FinnHub(Throttler):
         }
         return await self.__get_financials(params)
 
-    async def get_filings(self, symbol: str, _from: str, _to: str) -> list:
+    async def get_filings(self, symbol: str, _from: datetime.datetime, _to: datetime.datetime) -> list:
         path = "/stock/filings"
         params = {
             "symbol": symbol,
-            "from": _from,
-            "to": _to,
+            "from": _from.date().isoformat(),
+            "to": _to.date().isoformat(),
             "token": self.apikey
         }
         filings = []
@@ -124,7 +146,7 @@ class FinnHub(Throttler):
             async with await self.make_request("GET", self.url + path, params=params) as response:
                 data = await response.json()
                 filings += [{
-                    "date": datetime.date.fromisoformat(chunk["acceptedDate"].split(" ")[0]),
+                    "date": datetime.datetime.fromisoformat(chunk["acceptedDate"].split(" ")[0]),
                     "access_number": chunk["accessNumber"],
                     "form": chunk["form"]
                 } for chunk in data]
@@ -160,7 +182,7 @@ class FinnHub(Throttler):
             async with await self.make_request("GET", self.url + path, params=params) as response:
                 data = await response.json()
                 result += [{
-                    "date": datetime.date.fromisoformat(chunk["acceptedDate"].split(" ")[0]),
+                    "date": datetime.datetime.fromisoformat(chunk["acceptedDate"].split(" ")[0]),
                     "form": chunk["form"],
                     "access_number": chunk["accessNumber"],
                     "item1": chunk["item1"],
@@ -171,18 +193,18 @@ class FinnHub(Throttler):
                 } for chunk in data.get("similarity", [])]
         return result
 
-    async def get_dividends(self, symbol: str, _from: str, _to: str) -> list:
+    async def get_dividends(self, symbol: str, _from: datetime.datetime, _to: datetime.datetime) -> list:
         path = "/stock/dividend"
         params = {
             "symbol": symbol,
-            "from": _from,
-            "to": _to,
+            "from": _from.date().isoformat(),
+            "to": _to.date().isoformat(),
             "token": self.apikey
         }
         async with await self.make_request("GET", self.url + path, params=params) as response:
             data = await response.json()
             result = [{
-                "date": datetime.date.fromisoformat(chunk["date"]),
+                "date": datetime.datetime.fromisoformat(chunk["date"]),
                 "amount": chunk["amount"],
                 "adj_amount": chunk["adjustedAmount"]
             } for chunk in data]
@@ -192,19 +214,274 @@ class FinnHub(Throttler):
         path = "/stock/symbol"
         params = {
             "exchange": exchange,
-            "currency": currency
+            "currency": currency,
+            "token": self.apikey
         }
 
         async with await self.make_request("GET", self.url + path, params=params) as response:
             result = await response.json()
         return result
 
-    async def lookup(self, query: str):
+    async def symbol_lookup(self, query: str):
         path = "/search"
         params = {
-            "q": query
+            "q": query,
+            "token": self.apikey
         }
 
         async with await self.make_request("GET", self.url + path, params=params) as response:
             result = await response.json()["result"]
         return result
+
+    # Stocks
+    async def get_stock_candles(self, symbol: str, resolution: str, _from: datetime.datetime, _to: datetime.datetime):
+        path = "/stock/candle"
+        params = {
+            "symbol": symbol,
+            "resolution": resolution,
+            "from": int(_from.timestamp()),
+            "to": int(_to.timestamp()),
+            "format": "json",
+            "token": self.apikey
+        }
+        async with await self.make_request("GET", self.url + path, params=params) as response:
+            result = await response.json()
+        if result["s"] == "ok" and result["t"] is not None:
+            result = [
+                {
+                    "date": datetime.datetime.fromtimestamp(result["t"][i]),
+                    "open": result["o"][i],
+                    "high": result["h"][i],
+                    "low": result["l"][i],
+                    "close": result["c"][i],
+                    "volume": result["v"][i],
+                    "resolution": resolution
+                }
+                for i in range(len(result["t"]))
+            ]
+            return result
+        return []
+
+    async def get_stock_candle_latest(self, symbol: str):
+        path = "/quote"
+        params = {
+            "symbol": symbol,
+            "token": self.apikey
+        }
+        async with await self.make_request("GET", self.url + path, params=params) as response:
+            result = await response.json()
+        return {
+            "open": result["o"],
+            "close": result["c"],
+            "high": result["h"],
+            "low": result["l"]
+        }
+
+    async def get_tickers(self, symbol: str, date: datetime.datetime, limit: int, skip: int):
+        # path = "/stock/tick"
+        # params = {
+        #     "symbol": symbol,
+        #     "date": date.isoformat(),
+        #     "limit": limit,
+        #     "skip": skip,
+        #     "format": "csv",
+        #     "token": self.apikey
+        # }
+        raise NotImplementedError()
+
+    async def get_latest_bid_ask(self, symbol: str):
+        path = "/stock/bidask"
+        params = {
+            "symbol": symbol,
+            "token": self.apikey
+        }
+        async with await self.make_request("GET", self.url + path, params=params) as response:
+            result = await response.json()
+        return {
+            "date": datetime.datetime.fromtimestamp(result["t"]),
+            "ask": result["a"],
+            "bid": result["b"],
+            "ask_volume": result["av"],
+            "bid_volume": result["bv"]
+        }
+
+    async def get_splits(self, symbol: str, _from: datetime.datetime, _to: datetime.datetime):
+        path = "/stock/split"
+        params = {
+            "symbol": symbol,
+            "from": _from.date().isoformat(),
+            "to": _to.date().isoformat(),
+            "token": self.apikey
+        }
+        async with await self.make_request("GET", self.url + path, params=params) as response:
+            result = await response.json()
+        for res in result:
+            res["date"] = datetime.datetime.fromisoformat(res["date"])
+            res["fromFactor"] = float(res["fromFactor"])
+            res["toFactor"] = float(res["toFactor"])
+            del res["symbol"]
+        return result
+
+    # Estimates
+    async def get_trends(self, symbol: str):
+        path = "/stock/recommendation"
+        params = {
+            "symbol": symbol,
+            "token": self.apikey
+        }
+        async with await self.make_request("GET", self.url + path, params=params) as response:
+            result = await response.json()
+        for res in result:
+            res["date"] = datetime.datetime.fromisoformat(res["period"])
+            del res["period"]
+            del res["symbol"]
+        return result
+
+    async def get_target_price(self, symbol: str):
+        path = "/stock/price-target"
+        params = {
+            "symbol": symbol,
+            "token": self.apikey
+        }
+        async with await self.make_request("GET", self.url + path, params=params) as response:
+            result = await response.json()
+        result["date"] = datetime.datetime.fromisoformat(result["lastUpdated"])
+        del result["lastUpdated"]
+        del result["symbol"]
+        return result
+
+    async def get_eps_surprises(self, symbol: str):
+        path = "/stock/earnings"
+        params = {
+            "symbol": symbol,
+            "token": self.apikey
+        }
+        async with await self.make_request("GET", self.url + path, params=params) as response:
+            result = await response.json()
+        for res in result:
+            res["date"] = datetime.datetime.fromisoformat(res["period"])
+            del res["period"]
+            del res["symbol"]
+        return result
+
+    async def get_eps_estimates(self, symbol: str):
+        path = "/stock/eps-estimate"
+        params = {
+            "symbol": symbol,
+            "token": self.apikey
+        }
+        data = []
+        for freq in ["annual", "quarterly"]:
+            params["freq"] = freq
+            async with await self.make_request("GET", self.url + path, params=params) as response:
+                result = await response.json()
+            for res in result["data"]:
+                res["date"] = datetime.datetime.fromisoformat(res["period"])
+                del res["period"]
+            data += [{**d, "freq": freq} for d in result["data"]]
+
+        return data
+
+    async def get_revenue_estimates(self, symbol: str):
+        path = "/stock/revenue-estimate"
+        params = {
+            "symbol": symbol,
+            "token": self.apikey
+        }
+        data = []
+        for freq in ["annual", "quarterly"]:
+            params["freq"] = freq
+            async with await self.make_request("GET", self.url + path, params=params) as response:
+                result = await response.json()
+            for res in result["data"]:
+                res["date"] = datetime.datetime.fromisoformat(res["period"])
+                del res["period"]
+            data += [{**d, "freq": freq} for d in result["data"]]
+
+        return data
+
+    async def get_upgrades_downgrades(
+        self, symbol: str = None,
+        _from: datetime.datetime = None, _to: datetime.datetime = None
+    ):
+        path = "/stock/upgrade-downgrade"
+        params = {
+            "token": self.apikey
+        }
+        if symbol is not None:
+            params["symbol"] = symbol
+        if _from is not None:
+            params["from"] = _from.date().isoformat()
+        if _to is not None:
+            params["to"] = _to.date().isoformat()
+        async with await self.make_request("GET", self.url + path, params=params) as response:
+            result = await response.json()
+        for res in result:
+            res["date"] = datetime.datetime.fromtimestamp(res["gradeTime"])
+            del res["gradeTime"]
+            del res["symbol"]
+        return result
+
+    async def get_earnings_calendars(self, symbol: str, _from: datetime.datetime, _to: datetime.datetime):
+        path = "/calendar/earnings"
+        params = {
+            "symbol": symbol,
+            "from": _from.date().isoformat(),
+            "to": _to.date().isoformat(),
+            "token": self.apikey
+        }
+        async with await self.make_request("GET", self.url + path, params=params) as response:
+            result = await response.json()["earningsCalendar"]
+        for res in result:
+            res["date"] = datetime.datetime.fromisoformat(res["date"])
+            del res["symbol"]
+            del res["year"]
+        return result
+
+    # Crypto
+    async def get_crypto_exchanges(self):
+        path = "/crypto/exchange"
+        params = {
+            "token": self.apikey
+        }
+        async with await self.make_request("GET", self.url + path, params=params) as response:
+            result = await response.json()
+        return result
+
+    async def get_crypto_symbols(self, exchange: str):
+        path = "/crypto/symbol"
+        params = {
+            "exchange": exchange,
+            "token": self.apikey
+        }
+        async with await self.make_request("GET", self.url + path, params=params) as response:
+            result = await response.json()
+        return result
+
+    async def get_crypto_candles(self, symbol: str, resolution: str, _from: datetime.datetime, _to: datetime.datetime):
+        path = "/crypto/candle"
+        params = {
+            "symbol": symbol,
+            "resolution": resolution,
+            "from": int(_from.timestamp()),
+            "to": int(_to.timestamp()),
+            "format": "json",
+            "token": self.apikey
+        }
+        async with await self.make_request("GET", self.url + path, params=params) as response:
+            result = await response.json()
+        if result["s"] == "ok" and result["t"] is not None:
+            result = [
+                {
+                    "date": datetime.datetime.fromtimestamp(result["t"][i]),
+                    "open": result["o"][i],
+                    "close": result["c"][i],
+                    "high": result["h"][i],
+                    "low": result["l"][i],
+                    "volume": result["v"][i],
+                    "resolution": resolution
+                }
+                for i in range(len(result["t"]))
+            ]
+            return result
+        return []
