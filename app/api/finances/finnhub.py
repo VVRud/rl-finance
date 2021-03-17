@@ -222,7 +222,7 @@ class FinnHub(Throttler):
             result = await response.json()
         return result
 
-    async def symbol_lookup(self, query: str):
+    async def stocks_symbol_lookup(self, query: str):
         path = "/search"
         params = {
             "q": query,
@@ -431,7 +431,7 @@ class FinnHub(Throttler):
             "token": self.apikey
         }
         async with await self.make_request("GET", self.url + path, params=params) as response:
-            result = await response.json()["earningsCalendar"]
+            result = (await response.json())["earningsCalendar"]
         for res in result:
             res["date"] = datetime.datetime.fromisoformat(res["date"])
             del res["symbol"]

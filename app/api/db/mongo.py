@@ -109,7 +109,7 @@ class MongoCrud(AsyncIOMotorClient):
         )
         return result
 
-    async def get_insights(self, _type: str = None, limit: int = 10, offset: int = 0):
+    async def get_insights(self, limit: int = 10, offset: int = 0):
         result = await (
             self.insights_collection
             .find({"contentPieceType": {"identifier": "INSIGHT"}})
@@ -119,7 +119,7 @@ class MongoCrud(AsyncIOMotorClient):
         )
         return result
 
-    async def get_briefs(self, _type: str = None, limit: int = 10, offset: int = 0):
+    async def get_briefs(self, limit: int = 10, offset: int = 0):
         result = await (
             self.insights_collection
             .find({"contentPieceType": {"identifier": "DAILY_BRIEF"}})
@@ -129,7 +129,7 @@ class MongoCrud(AsyncIOMotorClient):
         )
         return result
 
-    async def get_other(self, _type: str = None, limit: int = 10, offset: int = 0):
+    async def get_other(self, limit: int = 10, offset: int = 0):
         result = await (
             self.other_collection
             .find({"contentPieceType": {"identifier": "OTHER"}})

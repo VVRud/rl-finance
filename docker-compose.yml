@@ -49,6 +49,8 @@ services:
       MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
       MONGO_INITDB_USERNAME: ${MONGO_USERNAME}
       MONGO_INITDB_PASSWORD: ${MONGO_PASSWORD}
+    ports:
+      - "27017:27017"
     networks:
       - internal_net
     volumes:

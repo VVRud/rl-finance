@@ -9,8 +9,8 @@ from routes import router
 
 gunicorn_logger = logging.getLogger("gunicorn.error")
 api_logger.handlers = gunicorn_logger.handlers
-db_logger.handlers = gunicorn_logger.handlers
 api_logger.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
+db_logger.handlers = gunicorn_logger.handlers
 db_logger.setLevel(os.getenv("LOG_LEVEL", "INFO").upper())
 
 app = FastAPI(redoc_url=None)
