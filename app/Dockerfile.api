@@ -1,5 +1,5 @@
-# FROM localhost:5000/fastapi-rpi:latest
-FROM tiangolo/uvicorn-gunicorn-fastapi:python3.7
+FROM localhost:5000/fastapi-rpi:latest
+# FROM tiangolo/uvicorn-gunicorn-fastapi:python3.7
 
 COPY ./requirements.api.txt /requirements.txt
 RUN pip install -r /requirements.txt
