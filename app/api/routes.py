@@ -37,11 +37,8 @@ async def add_stock_symbol(
     symbol: str = Query(..., title="Symbol of the company", description="Symbol to be added to the database.")
 ):
     profile = await fh.get_profile(symbol)
-    if profile["symbol"] == symbol:
-        background_tasks.add_task(add_company_tasks, symbol=symbol, profile=profile)
-        return profile
-    response.status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
-    return {"error": "Symbol error.", "profile": profile}
+    background_tasks.add_task(add_company_tasks, symbol=symbol, profile=profile)
+    return profile
 
 
 @router.get(
@@ -94,11 +91,8 @@ async def add_crypto_symbol(
     )
 ):
     profile = await fh.get_crypto_symbols(symbol)
-    if profile["symbol"] == symbol:
-        background_tasks.add_task(add_crypto_tasks, symbol=symbol, profile=profile)
-        return profile
-    response.status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
-    return {"error": "Symbol error."}
+    background_tasks.add_task(add_crypto_tasks, symbol=symbol, profile=profile)
+    return profile
 
 
 @router.get(
