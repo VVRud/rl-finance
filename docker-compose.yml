@@ -20,8 +20,6 @@ services:
       RABBITMQ_DEFAULT_PASS: ${RABBIT_PASSWORD}
     networks:
       - internal_net
-    ports:
-      - "15672:15672"
     volumes:
       - 'rabbitmq_data:/var/lib/rabbitmq'
     restart: always
@@ -49,8 +47,6 @@ services:
       MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
       MONGO_INITDB_USERNAME: ${MONGO_USERNAME}
       MONGO_INITDB_PASSWORD: ${MONGO_PASSWORD}
-    ports:
-      - "27017:27017"
     networks:
       - internal_net
     volumes:
