@@ -41,7 +41,7 @@ async def add_stock_symbol(
         background_tasks.add_task(add_company_tasks, symbol=symbol, profile=profile)
         return profile
     response.status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
-    return {"error": "Symbol error."}
+    return {"error": "Symbol error.", "profile": profile}
 
 
 @router.get(
