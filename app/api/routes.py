@@ -90,9 +90,13 @@ async def add_crypto_symbol(
         description="Symbol to be added to the database."
     )
 ):
-    profile = await fh.get_crypto_symbols(symbol)
-    background_tasks.add_task(add_crypto_tasks, symbol=symbol, profile=profile)
-    return profile
+    profiles = await fh.get_crypto_symbols(symbol.split(":")[0])
+    for profile in profiles:
+        if profile["symbol"] == symbol:
+            background_tasks.add_task(add_crypto_tasks, symbol=symbol, profile=profile)
+            return profile
+    response.status_code = status.HTTP_404_NOT_FOUND
+    return {"error": "Profile not found"}
 
 
 @router.get(
