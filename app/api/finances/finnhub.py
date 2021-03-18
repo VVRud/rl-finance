@@ -230,8 +230,8 @@ class FinnHub(Throttler):
         }
 
         async with await self.make_request("GET", self.url + path, params=params) as response:
-            result = await response.json()["result"]
-        return result
+            result = await response.json()
+        return result["result"]
 
     # Stocks
     async def get_stock_candles(self, symbol: str, resolution: str, _from: datetime.datetime, _to: datetime.datetime):
