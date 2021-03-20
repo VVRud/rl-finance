@@ -187,9 +187,15 @@ async def get_data(
         response.status_code = status.HTTP_400_BAD_REQUEST
         return {"error": f"More than need parameters are included. Excess are {list(excess_parameters)}"}
 
-    company = await pg_db.get_company(symbol)
-    if company is None:
-        response.status_code = status.HTTP_400_BAD_REQUEST
-        return {"error": f"Company {symbol} not found."}
+    if "symbol" in data_parameters[function]:
+        company = await pg_db.get_company(symbol)
+        if company is None:
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return {"error": f"Company {symbol} not found."}
+
+    if "resolution" in data_parameters[function]:
+        if resolution not in fh.resolutions:
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return {"error": f"Wrong `resolution` parameter. Available are: {fh.resolutions}."}
 
     return await data_functions[function](**parameters)
