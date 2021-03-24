@@ -172,10 +172,15 @@ async def get_data(
         "limit": limit,
         "offset": offset
     }
+
     if symbol:
         parameters["symbol"] = symbol
     if resolution:
         parameters["resolution"] = resolution
+
+    if function not in data_parameters:
+        response.status_code = status.HTTP_404_NOT_FOUND
+        return {"error": f"Function `{function}` not found."}
 
     missed_parameters = set(data_parameters[function]) - set(parameters)
     if len(missed_parameters) != 0:
@@ -193,9 +198,8 @@ async def get_data(
             response.status_code = status.HTTP_400_BAD_REQUEST
             return {"error": f"Company {symbol} not found."}
 
-    if "resolution" in data_parameters[function]:
-        if resolution not in fh.resolutions:
-            response.status_code = status.HTTP_400_BAD_REQUEST
-            return {"error": f"Wrong `resolution` parameter. Available are: {fh.resolutions}."}
+    if "resolution" in data_parameters[function] and resolution not in fh.resolutions:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return {"error": f"Wrong `resolution` parameter. Available are: {fh.resolutions}."}
 
     return await data_functions[function](**parameters)
