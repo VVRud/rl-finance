@@ -1,4 +1,4 @@
-query SeeAllContentPiecesPaginationQuery(
+query SeeAllContentPiecesQuery(
   $count: Int!
   $after: String
   $contentTypes: [String]

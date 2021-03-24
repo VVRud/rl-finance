@@ -8,6 +8,7 @@ query ContentPieceScreenQuery(
       ...ContentPieceWithBlocks_me
       contentPiece(contentPieceId: $contentPieceId) {
         id
+        hasAudio
         hasBlocks
         hasChapters
         ...RelatedContentPiecesRow_contentPiece
@@ -25,6 +26,13 @@ fragment ContentPieceBlock_block on ContentPieceBlock {
   ... on TextBlock {
     textMarkdown
   }
+  ... on ImageBlock {
+    alt
+    caption
+    image {
+      ...MessageImageLightbox_image
+    }
+  }
   ... on QuoteBlock {
     caption
     quote
@@ -38,14 +46,19 @@ fragment ContentPieceDetailsRow_contentPiece on ContentPiece {
 fragment ContentPieceDownload_contentPiece on ContentPiece {
   id
   title
-  subtitle
+  isPremium
   hasChapters
   hasBlocks
+  hasAudio
+  hasRelatedContent
+  audioUrl
   contentPieceType {
     identifier
   }
   chapters {
     id
+    audioUrl
+    hasAudio
     hasBlocks
   }
 }
@@ -59,11 +72,18 @@ fragment ContentPieceDownload_me on User {
 fragment ContentPieceWithBlocks_contentPiece on ContentPiece {
   id
   title
+  trackingTitle
   subtitle
+  readingTime
+  isPremium
   hasChapters
   hasBlocks
+  hasAudio
   contentPieceType {
     trackingName
+  }
+  headerImage {
+    ...URLImage_image
   }
   blocks {
     __typename
@@ -74,9 +94,14 @@ fragment ContentPieceWithBlocks_contentPiece on ContentPiece {
   }
   chapters {
     title
+    trackingTitle
     subtitle
+    audioDuration
+    hasAudio
+    isPremium
     hasBlocks
     deepLink
+    isCompleted
     id
     blocks {
       __typename
@@ -101,20 +126,31 @@ fragment ContentPieceWithBlocks_me on User {
 fragment ContentPieceWithChapters_contentPiece on ContentPiece {
   id
   title
+  trackingTitle
   subtitle
   deepLink
   summary
+  isPremium
   hasChapters
   hasBlocks
+  hasAudio
+  hasRelatedContent
+  headerImage {
+    ...URLImage_image
+  }
   contentPieceType {
     trackingName
   }
   chapters {
     id
     title
+    trackingTitle
     subtitle
+    audioDuration
+    hasAudio
     deepLink
     hasBlocks
+    isCompleted
   }
   ...ContentPieceDetailsRow_contentPiece
   ...RelatedContentPiecesRow_contentPiece
@@ -135,13 +171,26 @@ fragment HorizontalContentThumbnailScroll_contentPieces on ContentPiece {
   id
   title
   subtitle
+  isPremium
   deepLink
+  isCompleted
+  hasAudio
+  hasChapters
+  hasBlocks
+  headerImage {
+    ...URLImage_image
+  }
 }
 
 fragment HorizontalContentThumbnailScroll_me on User {
   authorization {
     ...authorization_authorization
   }
+}
+
+fragment MessageImageLightbox_image on URLImage {
+  full
+  ...URLImage_image
 }
 
 fragment RelatedContentPiecesRow_contentPiece on ContentPiece {
@@ -154,6 +203,15 @@ fragment RelatedContentPiecesRow_contentPiece on ContentPiece {
 
 fragment RelatedContentPiecesRow_me on User {
   ...HorizontalContentThumbnailScroll_me
+}
+
+fragment URLImage_image on URLImage {
+  base64
+  breakpoints {
+    uri
+    height
+    width
+  }
 }
 
 fragment authorization_authorization on Authorization {

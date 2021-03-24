@@ -1,14 +1,13 @@
 import os
 import datetime
-from gql import Client, gql
-from gql.transport.aiohttp import AIOHTTPTransport
-from .throttler import Limit, Throttler
+from gql import gql
+from gql.transport.exceptions import TransportQueryError
+from .throttler import Limit, FinimizeThrottler
 
 
-class Finimize(Throttler):
+class Finimize(FinimizeThrottler):
 
     def __init__(self):
-        self.queries_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "finimize_queries")
         self.url = "https://app.finimize.com/api/graphql/"
         self.headers = {
             "x-app-version": "2.0.2",
@@ -19,16 +18,33 @@ class Finimize(Throttler):
             "Content-Type": "application/json"
         }
 
-        self.transport = AIOHTTPTransport(url=self.url, headers=self.headers)
-        self.client = Client(transport=self.transport)
+        queries_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "finimize_queries")
+        with open(os.path.join(queries_dir, "content_first.graphql"), "r") as file:
+            self.first_query = gql(file.read())
+        with open(os.path.join(queries_dir, "content_pagination.graphql"), "r") as file:
+            self.pagination_query = gql(file.read())
+        with open(os.path.join(queries_dir, "single_content_piece.graphql"), "r") as file:
+            self.content_piece_query = gql(file.read())
+
+        self.content_types = ["DAILY_BRIEF", "INSIGHT", "OTHER"]
 
         super(Finimize, self).__init__([
             Limit(30, 60, 1, "fm:short"), Limit(1000, 86400, 1800, "fm:long")
-        ])
+        ], self.url, self.headers)
 
-        self.content_types = [
-            "DAILY_BRIEF", "INSIGHT", "OTHER"
-        ]
+    def clean_chapters(self, response):
+        for chapter in range(len(response["chapters"])):
+            chapter["_id"] = chapter.pop("id")
+            del response["chapters"][chapter]["audioDuration"]
+            del response["chapters"][chapter]["trackingTitle"]
+        response["chapters"][chapter] = self._clean_blocks(response["chapters"][chapter])
+        return response
+
+    def _clean_blocks(self, response):
+        rm_blocks = [i for i in range(len(response["blocks"])) if response["blocks"][i]["__typename"] == "ImageBlock"]
+        for block_idx in rm_blocks[::-1]:
+            del response["blocks"][block_idx]
+        return response
 
     async def get_ids(self, content_type: str, after: str = None):
         params = {
@@ -38,32 +54,53 @@ class Finimize(Throttler):
             "tagName": None
         }
 
-        with open(os.path.join(self.queries_dir, "content_pagination.graphql"), "r") as file:
-            query = gql(file.read())
+        if content_type is None:
+            query = self.first_query
+        else:
+            query = self.pagination_query
 
-        async with self.client as session:
-            response = await session.execute(query, variable_values=params)
+        # async with await self.make_request() as session:
+        try:
+            response = await self.make_request(query, variable_values=params)
+        except TransportQueryError:
+            return None, None
 
         data = response["viewer"]["me"]["contentPieces"]["edges"]
-
-        docs = [datum["node"] for datum in data]
-        ids = [doc["id"] for doc in docs]
+        ids = [datum["node"]["id"] for datum in data]
         cursors = [datum["cursor"] for datum in data]
 
-        return docs, ids, cursors
+        return ids, cursors
 
     async def get_single(self, _id: str):
         params = {
             "contentPieceId": _id
         }
 
-        with open(os.path.join(self.queries_dir, "single_content_piece.graphql"), "r") as file:
-            query = gql(file.read())
-
-        async with self.client as session:
-            response = await session.execute(query, variable_values=params)
+        # async with await self.make_request() as session:
+        try:
+            response = await self.make_request(self.content_piece_query, variable_values=params)
+        except TransportQueryError:
+            return None, None
         response = response["viewer"]["me"]["contentPiece"]
+
         response["_id"] = response.pop("id")
         response["dateUpdatedDisplay"] = datetime.datetime.fromisoformat(response["dateUpdatedDisplay"])
 
-        return response
+        if "headerImage" in response:
+            del response["headerImage"]
+        if "trackingTitle" in response:
+            del response["trackingTitle"]
+        if "audioUrl" in response:
+            del response["audioUrl"]
+        if "readingTime" in response:
+            del response["readingTime"]
+
+        response = self._clean_blocks(response)
+
+        related_contents = response.pop("relatedContentPieces")
+        related_ids = [related["id"] for related in related_contents]
+        for related in related_contents:
+            related["_id"] = related.pop("id")
+            del related["headerImage"]
+
+        return response, related_ids

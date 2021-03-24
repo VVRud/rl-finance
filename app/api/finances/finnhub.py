@@ -1,9 +1,9 @@
 import os
 import datetime
-from .throttler import Limit, Throttler
+from .throttler import Limit, FinnnhubThrottler
 
 
-class FinnHub(Throttler):
+class FinnHub(FinnnhubThrottler):
 
     def __init__(self):
         self.url = "https://finnhub.io/api/v1"

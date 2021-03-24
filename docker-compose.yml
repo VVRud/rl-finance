@@ -61,7 +61,7 @@ services:
       dockerfile: Dockerfile.celery-worker
     environment:
       LOG_LEVEL: INFO
-      C_FORCE_ROOT: "true"
+      C_FORCE_ROOT: 'true'
       FH_APIKEY: ${FH_APIKEY}
 
       POSTGRES_HOST: postgres
@@ -100,7 +100,7 @@ services:
       dockerfile: Dockerfile.celery-beat
     environment:
       LOG_LEVEL: INFO
-      C_FORCE_ROOT: "true"
+      C_FORCE_ROOT: 'true'
       FH_APIKEY: ${FH_APIKEY}
 
       POSTGRES_HOST: postgres

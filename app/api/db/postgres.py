@@ -104,12 +104,10 @@ class PgCrud(Database):
 
     # GET VALUES
     async def get_company(self, symbol: str):
-        print("GET COMPANY", file=sys.stdout)
         query = companies.select(
             whereclause=(companies.c.symbol == symbol)
         )
         row = await self.fetch_one(query)
-        print(row, file=sys.stdout)
         if row is not None:
             return dict(row)
         return row

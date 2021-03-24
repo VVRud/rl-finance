@@ -21,14 +21,14 @@ class CeleryConfig:
     beat_schedule = {
         "update_daily": {
             "task": "update_daily",
-            "schedule": crontab(minute=0, hour=5)
+            "schedule": crontab(minute=0, hour=3)
         },
         "update_weekly_periodic": {
             "task": "update_weekly",
-            "schedule": crontab(minute=0, hour=5, day_of_week=0)
+            "schedule": crontab(minute=0, hour=3, day_of_week=0)
         },
         "update_monthly": {
             "task": "update_monthly",
-            "schedule": crontab(minute=0, hour=5, day_of_month=1)
+            "schedule": crontab(minute=0, hour=3, day_of_month=1)
         }
     }

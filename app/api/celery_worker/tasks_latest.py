@@ -1,5 +1,5 @@
 import datetime
-from finances import fh
+from finances import fh, fm
 from celery_worker.worker import celery_app
 from celery_worker.db_tasks import PostgresTask, MongoTask
 
@@ -164,3 +164,10 @@ async def latest_retrieve_crypto_candles(self, symbol: str, c_id: int, resolutio
         result = fill_name_value(result, "c_id", c_id)
         result = fill_name_value(result, "resolution", resolution)
         await (await self.db).insert_crypto_candles(result)
+
+
+@celery_app.task(name="finimize_latest", base=MongoTask, bind=True)
+async def latest_retrieve_finimize(self, _id, name):
+    this, _ = await fm.get_single(_id)
+    if this is not None:
+        await (await self.db).funcs[name]["insert"]([this])
