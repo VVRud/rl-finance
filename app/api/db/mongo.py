@@ -105,7 +105,7 @@ class MongoCrud(AsyncIOMotorClient):
         result = await (
             self.cf_collection
             .find({"symbol": symbol})
-            .sort("dateUpdatedDisplay", pymongo.DESCENDING)
+            .sort("date", pymongo.DESCENDING)
             .skip(offset).limit(limit)
             .to_list(length=limit)
         )
@@ -115,7 +115,7 @@ class MongoCrud(AsyncIOMotorClient):
         result = await (
             self.is_collection
             .find({"symbol": symbol})
-            .sort("dateUpdatedDisplay", pymongo.DESCENDING)
+            .sort("date", pymongo.DESCENDING)
             .skip(offset).limit(limit)
             .to_list(length=limit)
         )
@@ -125,7 +125,7 @@ class MongoCrud(AsyncIOMotorClient):
         result = await (
             self.bs_collection
             .find({"symbol": symbol})
-            .sort("dateUpdatedDisplay", pymongo.DESCENDING)
+            .sort("date", pymongo.DESCENDING)
             .skip(offset).limit(limit)
             .to_list(length=limit)
         )
