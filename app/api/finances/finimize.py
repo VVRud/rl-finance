@@ -59,7 +59,6 @@ class Finimize(FinimizeThrottler):
         else:
             query = self.pagination_query
 
-        # async with await self.make_request() as session:
         try:
             response = await self.make_request(query, variable_values=params)
         except TransportQueryError:
@@ -76,7 +75,6 @@ class Finimize(FinimizeThrottler):
             "contentPieceId": _id
         }
 
-        # async with await self.make_request() as session:
         try:
             response = await self.make_request(self.content_piece_query, variable_values=params)
         except TransportQueryError:

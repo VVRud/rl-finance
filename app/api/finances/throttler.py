@@ -6,7 +6,6 @@ import aiohttp
 from redis import Redis
 from gql import Client
 from gql.transport.requests import RequestsHTTPTransport
-# from gql.transport.aiohttp import AIOHTTPTransport
 
 
 class Limit():
