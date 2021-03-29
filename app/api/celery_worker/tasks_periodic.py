@@ -10,13 +10,17 @@ from celery_worker.db_tasks import PostgresTask
 async def get_missed_ids() -> dict:
     results = dict()
     for c_type, crud in mongo_db.funcs.items():
-        latest = [doc["_id"] for doc in await crud["get"](10, 0)]
+        latest = [doc["_id"] for doc in await crud["get"](15, 0)]
         ids, cursors = await fm.get_ids(c_type)
         ids_next = ids.copy()
-        while not any(_id in ids_next for _id in latest) and len(cursors) != 0:
+        mask = [_id in ids_next for _id in latest]
+        mask_next = mask.copy()
+        while not any(mask_next) and len(cursors) != 0:
             ids_next, cursors = await fm.get_ids(c_type, cursors[-1])
+            mask_next = [_id in ids_next for _id in latest]
             ids += ids_next
-        results[c_type] = ids
+            mask += mask_next
+        results[c_type] = [_id for _id, val in zip(ids, mask) if not val]
     return results
 
 
