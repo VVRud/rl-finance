@@ -1,1 +1,1 @@
-from .status_models import StatusModel
+from .status_models import StatusModel # noqa

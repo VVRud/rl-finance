@@ -1,5 +1,4 @@
 import os
-import sys
 from typing import List
 from databases import Database
 from sqlalchemy import desc, and_

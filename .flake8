@@ -2,4 +2,4 @@
 exclude = .tox,*.egg,*egg-info,setup.py
 select = E,W,F
 max-line-length = 120
-ignore = W504,W605,F401
+ignore = W504
