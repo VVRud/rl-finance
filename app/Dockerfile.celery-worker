@@ -10,4 +10,4 @@ RUN pip install -r /requirements.txt
 COPY ./api /api
 WORKDIR /api
 
-ENTRYPOINT sleep 10 && celery -A celery_worker.worker worker -l ${LOG_LEVEL} -E -P celery_pool_asyncio:TaskPool -c 150
+ENTRYPOINT sleep 10 && celery -A celery_worker.worker worker -l ${LOG_LEVEL} -E -P celery_pool_asyncio:TaskPool -c 200
