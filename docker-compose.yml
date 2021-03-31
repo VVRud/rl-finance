@@ -104,7 +104,7 @@ services:
       - redis
       - rabbit
       - mongo
-      - postgres
+      - bouncer
     restart: always
 
   beat:
@@ -139,6 +139,10 @@ services:
     networks:
       - internal_net
     depends_on:
+      - redis
+      - rabbit
+      - mongo
+      - bouncer
       - worker
     restart: always
   
@@ -178,7 +182,7 @@ services:
       - '8090:80'
     depends_on:
       - redis
-      - postgres
+      - bouncer
       - mongo
       - worker
     restart: always
