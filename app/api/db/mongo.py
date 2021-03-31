@@ -58,51 +58,44 @@ class MongoCrud(AsyncIOMotorClient):
     async def insert_prs(self, docs: List[dict]):
         async with await self.start_session() as s:
             result = await self.prs_collection.insert_many(docs, session=s)
-        if not isinstance(result, list):
-            result = [result]
-        return [self.change_id(res) for res in result]
+        print(result.inserted_ids)
+        return result.inserted_ids
 
     async def insert_cash_flows(self, docs: List[dict]):
         async with await self.start_session() as s:
             result = await self.cf_collection.insert_many(docs, session=s)
-        if not isinstance(result, list):
-            result = [result]
-        return [self.change_id(res) for res in result]
+        print(result.inserted_ids)
+        return result.inserted_ids
 
     async def insert_income_statements(self, docs: List[dict]):
         async with await self.start_session() as s:
             result = await self.is_collection.insert_many(docs, session=s)
-        if not isinstance(result, list):
-            result = [result]
-        return [self.change_id(res) for res in result]
+        print(result.inserted_ids)
+        return result.inserted_ids
 
     async def insert_balance_sheets(self, docs: List[dict]):
         async with await self.start_session() as s:
             result = await self.bs_collection.insert_many(docs, session=s)
-        if not isinstance(result, list):
-            result = [result]
-        return [self.change_id(res) for res in result]
+        print(result.inserted_ids)
+        return result.inserted_ids
 
     async def insert_insights(self, docs: List[dict]):
         async with await self.start_session() as s:
             result = await self.insights_collection.insert_many(docs, session=s)
-        if not isinstance(result, list):
-            result = [result]
-        return [self.change_id(res) for res in result]
+        print(result.inserted_ids)
+        return result.inserted_ids
 
     async def insert_briefs(self, docs: List[dict]):
         async with await self.start_session() as s:
             result = await self.briefs_collection.insert_many(docs, session=s)
-        if not isinstance(result, list):
-            result = [result]
-        return [self.change_id(res) for res in result]
+        print(result.inserted_ids)
+        return result.inserted_ids
 
     async def insert_other(self, docs: List[dict]):
         async with await self.start_session() as s:
             result = await self.other_collection.insert_many(docs, session=s)
-        if not isinstance(result, list):
-            result = [result]
-        return [self.change_id(res) for res in result]
+        print(result.inserted_ids)
+        return result.inserted_ids
 
     # RETRIEVE
     async def get_prs(self, symbol: str, limit: int = 10, offset: int = 0):
