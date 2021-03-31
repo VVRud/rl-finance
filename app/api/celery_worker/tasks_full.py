@@ -2,6 +2,19 @@ import datetime
 from db import pg_db, mongo_db
 from finances import fh
 from celery_worker.worker import celery_app
+from celery.signals import worker_process_init, worker_process_shutdown
+
+
+@worker_process_init.connect
+async def init_worker(**kwargs):
+    await pg_db.connect()
+
+
+@worker_process_shutdown.connect
+async def shutdown_worker(**kwargs):
+    if pg_db.is_connected:
+        await pg_db.disconnect()
+    mongo_db.close()
 
 
 def fill_name_value(results, name, value):
