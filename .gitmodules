@@ -1,0 +1,3 @@
+[submodule "pgbouncer"]
+	path = pgbouncer
+	url = https://github.com/edoburu/docker-pgbouncer.git
