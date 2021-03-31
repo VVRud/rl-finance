@@ -2,7 +2,6 @@ gql[all]>=3.0.0a4
 aiohttp
 sqlalchemy
 databases[postgresql]
-aiopg
 redis
 certifi
 motor

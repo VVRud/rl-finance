@@ -4,7 +4,6 @@ redis
 gql[all]>=3.0.0a4
 sqlalchemy
 databases[postgresql]
-aiopg
 certifi
 python-snappy
 python-dateutil
