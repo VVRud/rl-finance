@@ -14,7 +14,7 @@ class PgCrud(Database):
 
     def __init__(self):
         self.database_url = (
-            f"postgresql+aiopg://{os.getenv('POSTGRES_USERNAME')}:{os.getenv('POSTGRES_PASSWORD')}@"
+            f"postgresql://{os.getenv('POSTGRES_USERNAME')}:{os.getenv('POSTGRES_PASSWORD')}@"
             f"{os.getenv('POSTGRES_HOST')}:{os.getenv('POSTGRES_PORT')}/"
             f"{os.getenv('POSTGRES_DATABASE')}"
         )
