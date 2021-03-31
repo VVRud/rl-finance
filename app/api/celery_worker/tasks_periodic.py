@@ -33,12 +33,21 @@ async def update_daily(self):
         for resolution in ["1", "5", "15", "30", "60", "D"]:
             await celery_app.send_task("stock_candles_latest", args=(company["symbol"], company["id"], resolution))
 
+    cryptos = await (await self.db).get_cryptos()
+    for crypto in cryptos:
+        for resolution in ["1", "5", "15", "30", "60", "D"]:
+            await celery_app.send_task("crypto_candles_latest", args=(crypto["symbol"], crypto["id"], resolution))
+
 
 @celery_app.task(name="update_weekly", base=PostgresTask, bind=True)
 async def update_weekly(self):
     companies = await (await self.db).get_companies()
     for company in companies:
         await celery_app.send_task("stock_candles_latest", args=(company["symbol"], company["id"], "W"))
+
+    cryptos = await (await self.db).get_cryptos()
+    for crypto in cryptos:
+        await celery_app.send_task("stock_candles_latest", args=(crypto["symbol"], crypto["id"], "W"))
 
 
 @celery_app.task(name="update_monthly", base=PostgresTask, bind=True)
@@ -59,3 +68,7 @@ async def update_monthly(self):
         await celery_app.send_task("eps_surprises_latest", args=(company["symbol"], company["id"]))
         await celery_app.send_task("eps_estimates_latest", args=(company["symbol"], company["id"]))
         await celery_app.send_task("revenue_estimates_latest", args=(company["symbol"], company["id"]))
+
+    cryptos = await (await self.db).get_cryptos()
+    for crypto in cryptos:
+        await celery_app.send_task("stock_candles_latest", args=(crypto["symbol"], crypto["id"], "M"))

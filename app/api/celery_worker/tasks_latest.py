@@ -19,7 +19,7 @@ async def latest_retrieve_stock_candles(self, symbol: str, c_id: int, resolution
     if len(result) != 0:
         result = fill_name_value(result, "c_id", c_id)
         result = fill_name_value(result, "resolution", resolution)
-        await (await self.db).insert_intraday(result)
+        await (await self.db).insert_stock_candles(result)
 
 
 @celery_app.task(name="balance_sheets_latest", base=MongoTask, bind=True)
