@@ -38,6 +38,20 @@ services:
       - './init_postgres.sql:/docker-entrypoint-initdb.d/init_postgres.sql'
     restart: always
 
+  bouncer:
+    container_name: pgbouncer
+    build:
+      context: ./pgbouncer
+      dockerfile: Dockerfile
+    networks:
+      - internal_net
+    volumes:
+      - './pgbouncer/config/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini'
+      - './pgbouncer/config/userlist.txt:/etc/pgbouncer/userlist.txt'
+    depends_on:
+      - postgres
+    restart: always
+
   mongo:
     container_name: mongodb
     image: mongo:latest
@@ -64,8 +78,8 @@ services:
       C_FORCE_ROOT: 'true'
       FH_APIKEY: ${FH_APIKEY}
 
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
+      POSTGRES_HOST: bouncer
+      POSTGRES_PORT: 6432
       POSTGRES_USERNAME: ${POSTGRES_USERNAME}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DATABASE: ${POSTGRES_DATABASE}
@@ -103,8 +117,8 @@ services:
       C_FORCE_ROOT: 'true'
       FH_APIKEY: ${FH_APIKEY}
 
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
+      POSTGRES_HOST: bouncer
+      POSTGRES_PORT: 6432
       POSTGRES_USERNAME: ${POSTGRES_USERNAME}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DATABASE: ${POSTGRES_DATABASE}
@@ -135,11 +149,11 @@ services:
       dockerfile: Dockerfile.api
     environment:
       LOG_LEVEL: info
-      MAX_WORKERS: 2
+      MAX_WORKERS: 4
       FH_APIKEY: ${FH_APIKEY}
 
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
+      POSTGRES_HOST: bouncer
+      POSTGRES_PORT: 6432
       POSTGRES_USERNAME: ${POSTGRES_USERNAME}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DATABASE: ${POSTGRES_DATABASE}
