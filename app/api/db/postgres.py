@@ -2,6 +2,7 @@ import os
 from typing import List
 from databases import Database
 from sqlalchemy import desc, and_
+from sqlalchemy.dialects.postgresql import insert
 from .pg_tables import (
     companies, dividends, sec_sentiment, sec_similarity,
     stocks_candles, splits,
@@ -31,74 +32,74 @@ class PgCrud(Database):
     # INSERT VALUES
     async def insert_company(self, values: dict):
         async with self.transaction():
-            query = companies.insert()
+            query = insert(companies).on_conflict_do_nothing()
             c_id = await self.execute(query, values)
         return c_id
 
     async def insert_dividends(self, values: List[dict]):
         async with self.transaction():
-            query = dividends.insert()
+            query = insert(dividends).on_conflict_do_nothing()
             await self.execute_many(query, values)
 
     async def insert_sec_sentiment(self, values: List[dict]):
         async with self.transaction():
-            query = sec_sentiment.insert()
+            query = insert(sec_sentiment).on_conflict_do_nothing()
             await self.execute_many(query, values)
 
     async def insert_sec_similarity(self, values: List[dict]):
         async with self.transaction():
-            query = sec_similarity.insert()
+            query = insert(sec_similarity).on_conflict_do_nothing()
             await self.execute_many(query, values)
 
     async def insert_stock_candles(self, values: List[dict]):
         async with self.transaction():
-            query = stocks_candles.insert()
+            query = insert(stocks_candles).on_conflict_do_nothing()
             await self.execute_many(query, values)
 
     async def insert_splits(self, values: List[dict]):
         async with self.transaction():
-            query = splits.insert()
+            query = insert(splits).on_conflict_do_nothing()
             await self.execute_many(query, values)
 
     async def insert_trends(self, values: List[dict]):
         async with self.transaction():
-            query = trends.insert()
+            query = insert(trends).on_conflict_do_nothing()
             await self.execute_many(query, values)
 
     async def insert_eps_estimates(self, values: List[dict]):
         async with self.transaction():
-            query = eps_estimates.insert()
+            query = insert(eps_estimates).on_conflict_do_nothing()
             await self.execute_many(query, values)
 
     async def insert_eps_surprises(self, values: List[dict]):
         async with self.transaction():
-            query = eps_surprises.insert()
+            query = insert(eps_surprises).on_conflict_do_nothing()
             await self.execute_many(query, values)
 
     async def insert_upgrades_downgrades(self, values: List[dict]):
         async with self.transaction():
-            query = upgrades_downgrades.insert()
+            query = insert(upgrades_downgrades).on_conflict_do_nothing()
             await self.execute_many(query, values)
 
     async def insert_revenue_estimates(self, values: List[dict]):
         async with self.transaction():
-            query = revenue_estimates.insert()
+            query = insert(revenue_estimates).on_conflict_do_nothing()
             await self.execute_many(query, values)
 
     async def insert_earnings_calendars(self, values: List[dict]):
         async with self.transaction():
-            query = earnings_calendars.insert()
+            query = insert(earnings_calendars).on_conflict_do_nothing()
             await self.execute_many(query, values)
 
     async def insert_crypto(self, values: dict):
         async with self.transaction():
-            query = crypto.insert()
+            query = insert(crypto).on_conflict_do_nothing()
             c_id = await self.execute(query, values)
         return c_id
 
     async def insert_crypto_candles(self, values: List[dict]):
         async with self.transaction():
-            query = crypto_candles.insert()
+            query = insert(crypto_candles).on_conflict_do_update()
             await self.execute_many(query, values)
 
     # GET VALUES
@@ -146,7 +147,7 @@ class PgCrud(Database):
         rows = await self.fetch_all(query=query)
         return self.mappings_to_dicts(rows)
 
-    async def get_stocks_candles(self, symbol: str, resolution: str, limit: int = 100, offset: int = None):
+    async def get_stock_candles(self, symbol: str, resolution: str, limit: int = 100, offset: int = None):
         _id = (await self.get_company(symbol))["id"]
         query = stocks_candles.select(
             whereclause=and_(

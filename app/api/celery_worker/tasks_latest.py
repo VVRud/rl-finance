@@ -12,7 +12,7 @@ def fill_name_value(results, name, value):
 
 @celery_app.task(name="stock_candles_latest", base=PostgresTask, bind=True)
 async def latest_retrieve_stock_candles(self, symbol: str, c_id: int, resolution: str):
-    latest = await (await self.db).get_stocks_candles(symbol, resolution, 10)
+    latest = await (await self.db).get_stock_candles(symbol, resolution, 10)
     startdate = latest[0]["date"]
     enddate = datetime.datetime.now()
     result = await fh.get_stock_candles(symbol, resolution, startdate, enddate)

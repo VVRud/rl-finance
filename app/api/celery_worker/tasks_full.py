@@ -126,7 +126,7 @@ async def full_retrieve_upgrades_downgrades(
         await (await self.db).insert_upgrades_downgrades(fill_name_value(result, "c_id", c_id))
 
 
-@celery_app.task(name="earnings_calendar_full", base=PostgresTask, bind=True)
+@celery_app.task(name="earnings_calendars_full", base=PostgresTask, bind=True)
 async def full_retrieve_earnings_calendars(
     self, symbol: str, c_id: int,
     startdate: datetime.datetime, enddate: datetime.datetime

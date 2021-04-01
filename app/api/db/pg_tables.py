@@ -1,4 +1,7 @@
-from sqlalchemy import BigInteger, Column, DateTime, Float, ForeignKey, Integer, MetaData, String, Table, Text, text
+from sqlalchemy import (
+    BigInteger, Column, DateTime, Float, ForeignKey, Integer,
+    MetaData, String, Table, Text, UniqueConstraint, text
+)
 
 metadata = MetaData()
 
@@ -49,7 +52,8 @@ crypto_candles = Table(
     Column('low', Float, nullable=False),
     Column('close', Float, nullable=False),
     Column('volume', BigInteger, nullable=False),
-    Column('resolution', String(2), nullable=False)
+    Column('resolution', String(2), nullable=False),
+    UniqueConstraint('c_id', 'date', 'resolution')
 )
 
 
@@ -59,7 +63,8 @@ dividends = Table(
     Column('c_id', ForeignKey('companies.id'), nullable=False),
     Column('date', DateTime, nullable=False),
     Column('amount', Float, nullable=False),
-    Column('adj_amount', Float, nullable=False)
+    Column('adj_amount', Float, nullable=False),
+    UniqueConstraint('c_id', 'date')
 )
 
 
@@ -73,7 +78,8 @@ earnings_calendars = Table(
     Column('hour', String(8), nullable=False),
     Column('quarter', Integer, nullable=False),
     Column('revenueActual', BigInteger, nullable=False),
-    Column('revenueEstimate', BigInteger, nullable=False)
+    Column('revenueEstimate', BigInteger, nullable=False),
+    UniqueConstraint('c_id', 'date')
 )
 
 
@@ -86,7 +92,8 @@ eps_estimates = Table(
     Column('epsHigh', Float, nullable=False),
     Column('epsLow', Float, nullable=False),
     Column('numberAnalysts', Integer, nullable=False),
-    Column('freq', String(64), nullable=False)
+    Column('freq', String(64), nullable=False),
+    UniqueConstraint('c_id', 'date')
 )
 
 
@@ -96,7 +103,8 @@ eps_surprises = Table(
     Column('c_id', ForeignKey('companies.id'), nullable=False),
     Column('date', DateTime, nullable=False),
     Column('actual', Float, nullable=False),
-    Column('estimate', Float, nullable=False)
+    Column('estimate', Float, nullable=False),
+    UniqueConstraint('c_id', 'date')
 )
 
 
@@ -109,7 +117,8 @@ revenue_estimates = Table(
     Column('revenueHigh', BigInteger, nullable=False),
     Column('revenueLow', BigInteger, nullable=False),
     Column('numberAnalysts', Integer, nullable=False),
-    Column('freq', String(64), nullable=False)
+    Column('freq', String(64), nullable=False),
+    UniqueConstraint('c_id', 'date')
 )
 
 
@@ -128,7 +137,8 @@ sec_sentiment = Table(
     Column('uncertainty', Float, nullable=False),
     Column('constraining', Float, nullable=False),
     Column('modal_strong', Float, nullable=False),
-    Column('modal_moderate', Float, nullable=False)
+    Column('modal_moderate', Float, nullable=False),
+    UniqueConstraint('c_id', 'date', 'form', 'access_number')
 )
 
 
@@ -143,7 +153,8 @@ sec_similarity = Table(
     Column('item2', Float, nullable=False),
     Column('item1A', Float, nullable=False),
     Column('item7', Float, nullable=False),
-    Column('item7A', Float, nullable=False)
+    Column('item7A', Float, nullable=False),
+    UniqueConstraint('c_id', 'date', 'form', 'access_number')
 )
 
 
@@ -153,7 +164,8 @@ splits = Table(
     Column('c_id', ForeignKey('companies.id'), nullable=False),
     Column('date', DateTime, nullable=False),
     Column('fromFactor', Float, nullable=False),
-    Column('toFactor', Float, nullable=False)
+    Column('toFactor', Float, nullable=False),
+    UniqueConstraint('c_id', 'date')
 )
 
 
@@ -167,7 +179,8 @@ stocks_candles = Table(
     Column('low', Float, nullable=False),
     Column('close', Float, nullable=False),
     Column('volume', BigInteger, nullable=False),
-    Column('resolution', String(2), nullable=False)
+    Column('resolution', String(2), nullable=False),
+    UniqueConstraint('c_id', 'date', 'resolution')
 )
 
 
@@ -180,7 +193,8 @@ trends = Table(
     Column('hold', Integer, nullable=False),
     Column('sell', Integer, nullable=False),
     Column('strongBuy', Integer, nullable=False),
-    Column('strongSell', Integer, nullable=False)
+    Column('strongSell', Integer, nullable=False),
+    UniqueConstraint('c_id', 'date')
 )
 
 
@@ -192,5 +206,6 @@ upgrades_downgrades = Table(
     Column('company', String(64), nullable=False),
     Column('fromGrade', String(64), nullable=False),
     Column('toGrade', String(64), nullable=False),
-    Column('action', String(64), nullable=False)
+    Column('action', String(64), nullable=False),
+    UniqueConstraint('c_id', 'date', 'company')
 )

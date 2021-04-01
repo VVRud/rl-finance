@@ -149,7 +149,7 @@ services:
     restart: always
   
   api:
-    container_name: rl_finance_api
+    container_name: api
     build:
       context: ./app
       dockerfile: Dockerfile.api
