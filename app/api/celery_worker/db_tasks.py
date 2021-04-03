@@ -1,11 +1,14 @@
 from async_property import async_property
 from databases.core import logger
 from db import pg_db, mongo_db
+from asyncpg.exceptions._base import InterfaceError
 from celery import Task
 
 
 class PostgresTask(Task):
     _db = None
+    autoretry_for = (InterfaceError,)
+    retry_kwargs = {"max_retries": 10, "countdown": 10}
 
     @async_property
     async def db(self):
