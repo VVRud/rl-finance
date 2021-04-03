@@ -20,8 +20,8 @@ class PgCrud(Database):
             f"{os.getenv('POSTGRES_DATABASE')}"
         )
 
-        min_size = os.getenv("POSTGRES_MIN_CONN", 1)
-        max_size = os.getenv("POSTGRES_MAX_CONN", 2)
+        min_size = int(os.getenv("POSTGRES_MIN_CONN", 1))
+        max_size = int(os.getenv("POSTGRES_MAX_CONN", 2))
 
         super(PgCrud, self).__init__(self.database_url, min_size=min_size, max_size=max_size)
 
