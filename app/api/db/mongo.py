@@ -1,7 +1,10 @@
 import os
+import logging
 from typing import List
 from motor.motor_asyncio import AsyncIOMotorClient
 import pymongo
+
+logger = logging.getLogger()
 
 
 class MongoCrud(AsyncIOMotorClient):
@@ -40,32 +43,50 @@ class MongoCrud(AsyncIOMotorClient):
     # INSERT
     async def insert_company_news(self, docs: List[dict]):
         async with await self.start_session() as s:
-            result = await self.news_collection.insert_many(docs, ordered=False, session=s)
+            try:
+                result = await self.news_collection.insert_many(docs, ordered=False, session=s)
+            except pymongo.errors.BulkWriteError as e:
+                logger.info(f"{len(e.details['writeErrors'])} duplicates were found on insert.")
         return [str(res) for res in result.inserted_ids]
 
     async def insert_press_releases(self, docs: List[dict]):
         async with await self.start_session() as s:
-            result = await self.prs_collection.insert_many(docs, ordered=False, session=s)
+            try:
+                result = await self.prs_collection.insert_many(docs, ordered=False, session=s)
+            except pymongo.errors.BulkWriteError as e:
+                logger.info(f"{len(e.details['writeErrors'])} duplicates were found on insert.")
         return [str(res) for res in result.inserted_ids]
 
     async def insert_cash_flows(self, docs: List[dict]):
         async with await self.start_session() as s:
-            result = await self.cf_collection.insert_many(docs, ordered=False, session=s)
+            try:
+                result = await self.cf_collection.insert_many(docs, ordered=False, session=s)
+            except pymongo.errors.BulkWriteError as e:
+                logger.info(f"{len(e.details['writeErrors'])} duplicates were found on insert.")
         return [str(res) for res in result.inserted_ids]
 
     async def insert_income_statements(self, docs: List[dict]):
         async with await self.start_session() as s:
-            result = await self.is_collection.insert_many(docs, ordered=False, session=s)
+            try:
+                result = await self.is_collection.insert_many(docs, ordered=False, session=s)
+            except pymongo.errors.BulkWriteError as e:
+                logger.info(f"{len(e.details['writeErrors'])} duplicates were found on insert.")
         return [str(res) for res in result.inserted_ids]
 
     async def insert_balance_sheets(self, docs: List[dict]):
         async with await self.start_session() as s:
-            result = await self.bs_collection.insert_many(docs, ordered=False, session=s)
+            try:
+                result = await self.bs_collection.insert_many(docs, ordered=False, session=s)
+            except pymongo.errors.BulkWriteError as e:
+                logger.info(f"{len(e.details['writeErrors'])} duplicates were found on insert.")
         return [str(res) for res in result.inserted_ids]
 
     async def insert_finimize_news(self, docs: List[dict]):
         async with await self.start_session() as s:
-            result = await self.finimize_collection.insert_many(docs, ordered=False, session=s)
+            try:
+                result = await self.finimize_collection.insert_many(docs, ordered=False, session=s)
+            except pymongo.errors.BulkWriteError as e:
+                logger.info(f"{len(e.details['writeErrors'])} duplicates were found on insert.")
         return [str(res) for res in result.inserted_ids]
 
     # RETRIEVE
