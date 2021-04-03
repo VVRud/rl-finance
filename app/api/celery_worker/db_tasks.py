@@ -9,16 +9,17 @@ from celery import Task
 class PostgresTask(Task):
     _db = None
     autoretry_for = (InterfaceError, ConnectionDoesNotExistError)
-    retry_kwargs = {"max_retries": 10, "countdown": 10}
+    retry_kwargs = {"max_retries": 12, "countdown": 10}
 
     @async_property
     async def db(self):
-        try:
-            await pg_db.connect()
-        except AssertionError as e:
-            logger.warning(f"Skipping. {str(e)}")
-        finally:
-            self._db = pg_db
+        if self._db is None:
+            try:
+                await pg_db.connect()
+            except AssertionError as e:
+                logger.warning(f"Skipping. {str(e)}")
+            finally:
+                self._db = pg_db
         return self._db
 
 
