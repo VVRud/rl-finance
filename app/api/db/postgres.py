@@ -19,7 +19,11 @@ class PgCrud(Database):
             f"{os.getenv('POSTGRES_HOST')}:{os.getenv('POSTGRES_PORT')}/"
             f"{os.getenv('POSTGRES_DATABASE')}"
         )
-        super(PgCrud, self).__init__(self.database_url, min_size=10, max_size=10)
+
+        min_size = os.getenv("POSTGRES_MIN_CONN", 1)
+        max_size = os.getenv("POSTGRES_MAX_CONN", 2)
+
+        super(PgCrud, self).__init__(self.database_url, min_size=min_size, max_size=max_size)
 
     def get_status(self):
         return {
