@@ -3,7 +3,6 @@ from databases.core import logger
 from db import PgCrud, MongoCrud
 from asyncpg.exceptions import ConnectionDoesNotExistError
 from asyncpg.exceptions._base import InterfaceError
-import asyncio
 from celery import Task
 
 
@@ -23,12 +22,6 @@ class PostgresTask(Task):
             finally:
                 self._db = db
         return self._db
-
-    def after_return(self, status, retval, task_id, args, kwargs, einfo):
-        if self._db is not None:
-            future = asyncio.ensure_future(self._db.disconnect())
-            while not future.done():
-                pass
 
 
 class MongoTask(Task):
