@@ -1,6 +1,6 @@
 from async_property import async_property
 from databases.core import logger
-from db import PgCrud, mongo_db
+from db import PgCrud, MongoCrud
 from asyncpg.exceptions import ConnectionDoesNotExistError
 from asyncpg.exceptions._base import InterfaceError
 from celery import Task
@@ -30,5 +30,5 @@ class MongoTask(Task):
     @async_property
     async def db(self):
         if self._db is None:
-            self._db = mongo_db
+            self._db = MongoCrud()
         return self._db
