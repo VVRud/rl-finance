@@ -22,6 +22,15 @@ async def latest_retrieve_stock_candles(self, symbol: str, c_id: int, resolution
         await (await self.db).insert_stock_candles(result)
 
 
+@celery_app.task(name="company_news_latest", base=MongoTask, bind=True)
+async def latest_retrieve_company_news(self, symbol: str, c_id: int):
+    result = await fh.get_company_news(symbol)
+    latest = await (await self.db).get_company_news(symbol)
+    result = [res for res in result if res["date"] > latest[0]["date"]]
+    if len(result) != 0:
+        await (await self.db).insert_balance_sheets(fill_name_value(result, "c_id", c_id))
+
+
 @celery_app.task(name="balance_sheets_latest", base=MongoTask, bind=True)
 async def latest_retrieve_balance_sheets(self, symbol: str, c_id: int):
     result = await fh.get_balance_sheets(symbol)
@@ -80,12 +89,12 @@ async def latest_retrieve_dividents(self, symbol: str, c_id: int):
 
 @celery_app.task(name="press_releases_latest", base=MongoTask, bind=True)
 async def latest_retrieve_press_releases(self, symbol: str, c_id: int):
-    latest = await (await self.db).get_prs(symbol)
+    latest = await (await self.db).get_press_releases(symbol)
     startdate = latest[0]["date"]
     enddate = datetime.datetime.now()
     result = await fh.get_press_releases(symbol, startdate, enddate)
     if len(result) != 0:
-        await (await self.db).insert_prs(fill_name_value(result, "c_id", c_id))
+        await (await self.db).insert_press_releases(fill_name_value(result, "c_id", c_id))
 
 
 @celery_app.task(name="splits_latest", base=PostgresTask, bind=True)
@@ -167,7 +176,7 @@ async def latest_retrieve_crypto_candles(self, symbol: str, c_id: int, resolutio
 
 
 @celery_app.task(name="finimize_latest", base=MongoTask, bind=True)
-async def latest_retrieve_finimize(self, _id, name):
+async def latest_retrieve_finimize(self, _id):
     this, _ = await fm.get_single(_id)
     if this is not None:
-        await (await self.db).funcs[name]["insert"]([this])
+        await (await self.db).insert_finimize_news([this])

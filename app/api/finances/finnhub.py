@@ -75,6 +75,25 @@ class FinnHub(FinnnhubThrottler):
 
         return result
 
+    async def get_company_news(self, symbol: str, _from: datetime.datetime, _to: datetime.datetime):
+        path = "/company-news"
+        params = {
+            "symbol": symbol,
+            "from": _from.date().isoformat(),
+            "to": _to.date().isoformat(),
+            "token": self.apikey
+        }
+
+        async with await self.make_request("GET", self.url + path, params=params) as response:
+            result = await response.json()
+
+        for res in result:
+            res["_id"] = res.pop("id")
+            res["date"] = datetime.datetime.fromtimestamp(res.pop("datetime"))
+            del res["image"]
+            del res["category"]
+        return result
+
     async def get_press_releases(self, symbol: str, _from: datetime.datetime, _to: datetime.datetime) -> list:
         def cleanup_chunk(chunk):
             try:

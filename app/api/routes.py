@@ -165,6 +165,7 @@ async def get_data(
     function: str = Path(..., title="Function", decription="Function name to call and data name to get."),
     symbol: Optional[str] = Query(None, title="Symbol", description="Symbol to retrieve data for."),
     resolution: Optional[str] = Query(None, title="Resolution", description="Resolution for candles."),
+    content_type: Optional[str] = Query(None, title="Resolution", description="Content type for Finimize News."),
     limit: int = Query(100, title="Limit", description="Limit for response."),
     offset: int = Query(0, title="Offset", description="Offset for response.")
 ):
@@ -177,6 +178,8 @@ async def get_data(
         parameters["symbol"] = symbol
     if resolution:
         parameters["resolution"] = resolution
+    if content_type:
+        parameters["content_type"] = content_type
 
     if function not in data_parameters:
         response.status_code = status.HTTP_404_NOT_FOUND
@@ -201,5 +204,9 @@ async def get_data(
     if "resolution" in data_parameters[function] and resolution not in fh.resolutions:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return {"error": f"Wrong `resolution` parameter. Available are: {fh.resolutions}."}
+
+    if "content_type" in data_parameters[function] and content_type not in fm.content_types:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return {"error": f"Wrong `content_type` parameter. Available are: {fm.content_types}."}
 
     return await data_functions[function](**parameters)

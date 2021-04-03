@@ -82,16 +82,11 @@ class Finimize(FinimizeThrottler):
         response = response["viewer"]["me"]["contentPiece"]
 
         response["_id"] = response.pop("id")
-        response["dateUpdatedDisplay"] = datetime.datetime.fromisoformat(response["dateUpdatedDisplay"])
+        response["date"] = datetime.datetime.fromisoformat(response.pop("dateUpdatedDisplay"))
 
-        if "headerImage" in response:
-            del response["headerImage"]
-        if "trackingTitle" in response:
-            del response["trackingTitle"]
-        if "audioUrl" in response:
-            del response["audioUrl"]
-        if "readingTime" in response:
-            del response["readingTime"]
+        for part in ["headerImage", "trackingTitle", "audioUrl", "readingTime"]:
+            if part in response:
+                del response[part]
 
         response = self._clean_blocks(response)
 

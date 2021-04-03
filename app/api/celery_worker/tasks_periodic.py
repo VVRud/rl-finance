@@ -5,9 +5,9 @@ from celery_worker.db_tasks import PostgresTask
 
 
 async def get_missed_ids() -> dict:
-    results = dict()
-    for c_type, crud in mongo_db.funcs.items():
-        latest = [doc["_id"] for doc in await crud["get"](20, 0)]
+    results = []
+    for c_type in fm.content_types:
+        latest = [doc["_id"] for doc in await mongo_db.get_finimize_news(c_type, 20)]
         ids, cursors = await fm.get_ids(c_type)
         ids_next = ids.copy()
         mask = [_id not in latest for _id in ids_next]
@@ -17,19 +17,19 @@ async def get_missed_ids() -> dict:
             mask_next = [_id not in latest for _id in ids_next]
             ids += ids_next
             mask += mask_next
-        results[c_type] = [_id for _id, masked in zip(ids, mask) if masked]
+        results += [_id for _id, masked in zip(ids, mask) if masked]
     return results
 
 
 @celery_app.task(name="update_daily", base=PostgresTask, bind=True)
 async def update_daily(self):
     ids = await get_missed_ids()
-    for name, _ids in ids.items():
-        for _id in _ids:
-            await celery_app.send_task("finimize_latest", args=(_id, name))
+    for _id in ids:
+        await celery_app.send_task("finimize_latest", args=(_id,))
 
     companies = await (await self.db).get_companies()
     for company in companies:
+        await celery_app.send_task("company_news_latest", args=(company["symbol"], company["id"]))
         for resolution in ["1", "5", "15", "30", "60", "D"]:
             await celery_app.send_task("stock_candles_latest", args=(company["symbol"], company["id"], resolution))
 

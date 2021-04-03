@@ -22,9 +22,19 @@ async def full_retrieve_stock_candles(
         await (await self.db).insert_stock_candles(result)
 
 
-@celery_app.task(name="balance_sheets_full", base=MongoTask, bind=True)
+@celery_app.task(name="company_news_full", base=MongoTask, bind=True)
+async def full_retrieve_company_news(
+    self, symbol: str, c_id: int,
+    startdate: datetime.datetime, enddate: datetime.datetime
+):
+    result = await fh.get_company_news(symbol)
+    if len(result) != 0:
+        await (await self.db).insert_balance_sheets(fill_name_value(result, "c_id", c_id))
+
+
+@celery_app.task(name="company_news_full", base=MongoTask, bind=True)
 async def full_retrieve_balance_sheets(self, symbol: str, c_id: int):
-    result = await fh.get_balance_sheets(symbol)
+    result = await fh.get_company_news(symbol)
     if len(result) != 0:
         await (await self.db).insert_balance_sheets(fill_name_value(result, "c_id", c_id))
 
@@ -78,7 +88,7 @@ async def full_retrieve_press_releases(
 ):
     result = await fh.get_press_releases(symbol, startdate, enddate)
     if len(result) != 0:
-        await (await self.db).insert_prs(fill_name_value(result, "c_id", c_id))
+        await (await self.db).insert_press_releases(fill_name_value(result, "c_id", c_id))
 
 
 @celery_app.task(name="splits_full", base=PostgresTask, bind=True)

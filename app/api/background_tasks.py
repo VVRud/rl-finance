@@ -26,6 +26,7 @@ async def add_company_tasks(symbol: str, profile: dict):
             celery_app.send_task("splits_full", args=(symbol, c_id, startdate, enddate))
             celery_app.send_task("upgrades_downgrades_full", args=(symbol, c_id, startdate, enddate))
             celery_app.send_task("earnings_calendars_full", args=(symbol, c_id, startdate, enddate))
+            celery_app.send_task("company_news_full", args=(symbol, c_id, startdate, enddate))
 
             enddate = enddate - dateutil.relativedelta.relativedelta(months=2)
             startdate = startdate - dateutil.relativedelta.relativedelta(months=2)
