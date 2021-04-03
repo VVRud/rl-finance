@@ -1,6 +1,6 @@
 from async_property import async_property
 from databases.core import logger
-from db import pg_db, mongo_db
+from db import PgCrud, mongo_db
 from asyncpg.exceptions import ConnectionDoesNotExistError
 from asyncpg.exceptions._base import InterfaceError
 from celery import Task
@@ -14,12 +14,13 @@ class PostgresTask(Task):
     @async_property
     async def db(self):
         if self._db is None:
+            db = PgCrud()
             try:
-                await pg_db.connect()
+                await db.connect()
             except AssertionError as e:
                 logger.warning(f"Skipping. {str(e)}")
             finally:
-                self._db = pg_db
+                self._db = db
         return self._db
 
 
