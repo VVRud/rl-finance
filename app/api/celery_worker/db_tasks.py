@@ -25,7 +25,9 @@ class PostgresTask(Task):
         return self._db
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
-        asyncio.ensure_future(self._db.disconnect())
+        future = asyncio.ensure_future(self._db.disconnect())
+        while not future.done():
+            pass
 
 
 class MongoTask(Task):
