@@ -37,6 +37,9 @@ async def add_stock_symbol(
     symbol: str = Query(..., title="Symbol of the company", description="Symbol to be added to the database.")
 ):
     profile = await fh.get_profile(symbol)
+    if profile is None:
+        response.status_code = status.HTTP_404_NOT_FOUND
+        return {"error": "Company not found."}
     background_tasks.add_task(add_company_tasks, symbol=symbol, profile=profile)
     return profile
 

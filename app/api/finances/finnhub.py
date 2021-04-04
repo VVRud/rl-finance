@@ -44,6 +44,9 @@ class FinnHub(FinnnhubThrottler):
 
         async with await self.make_request("GET", self.url + path, params=params) as response:
             data = await response.json()
+
+        result = None
+        if len(data) != 0:
             result = {
                 "name": data["name"],
                 "symbol": data["ticker"],
@@ -54,7 +57,7 @@ class FinnHub(FinnnhubThrottler):
                 "address": data["address"],
 
                 "exchange": data["exchange"],
-                "ipo": datetime.datetime.fromisoformat(data["ipo"]),
+                "ipo": datetime.datetime.fromisoformat(data["ipo"]) if data["ipo"] != "" else datetime.datetime.min,
                 "share_outstanding": data["shareOutstanding"],
                 "market_capitalization": data["marketCapitalization"],
                 "employeeTotal": int(float(data["employeeTotal"])),
