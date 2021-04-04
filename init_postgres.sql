@@ -37,8 +37,7 @@ CREATE TABLE "sec_sentiment" (
   "uncertainty" float(8) NOT NULL,
   "constraining" float(8) NOT NULL,
   "modal_strong" float(8) NOT NULL,
-  "modal_moderate" float(8) NOT NULL,
-  UNIQUE ("c_id", "date", "form", "access_number")
+  "modal_moderate" float(8) NOT NULL
 );
 
 CREATE TABLE "sec_similarity" (
@@ -51,8 +50,7 @@ CREATE TABLE "sec_similarity" (
   "item2" float(8) NOT NULL,
   "item1A" float(8) NOT NULL,
   "item7" float(8) NOT NULL,
-  "item7A" float(8) NOT NULL,
-  UNIQUE ("c_id", "date", "form", "access_number")
+  "item7A" float(8) NOT NULL
 );
 
 CREATE TABLE "dividends" (
@@ -60,8 +58,7 @@ CREATE TABLE "dividends" (
   "c_id" integer NOT NULL,
   "date" timestamp NOT NULL,
   "amount" float(8) NOT NULL,
-  "adj_amount" float(8) NOT NULL,
-  UNIQUE ("c_id", "date")
+  "adj_amount" float(8) NOT NULL
 );
 
 CREATE TABLE "stocks_candles" (
@@ -73,8 +70,7 @@ CREATE TABLE "stocks_candles" (
   "low" float(8) NOT NULL,
   "close" float(8) NOT NULL,
   "volume" bigint NOT NULL,
-  "resolution" varchar(2) NOT NULL,
-  UNIQUE ("c_id", "date", "resolution")
+  "resolution" varchar(2) NOT NULL
 );
 
 CREATE TABLE "splits" (
@@ -82,8 +78,7 @@ CREATE TABLE "splits" (
   "c_id" integer NOT NULL,
   "date" timestamp NOT NULL,
   "fromFactor" float(8) NOT NULL,
-  "toFactor" float(8) NOT NULL,
-  UNIQUE ("c_id", "date")
+  "toFactor" float(8) NOT NULL
 );
 
 CREATE TABLE "trends" (
@@ -94,8 +89,7 @@ CREATE TABLE "trends" (
   "hold" integer NOT NULL,
   "sell" integer NOT NULL,
   "strongBuy" integer NOT NULL,
-  "strongSell" integer NOT NULL,
-  UNIQUE ("c_id", "date")
+  "strongSell" integer NOT NULL
 );
 
 CREATE TABLE "eps_surprises" (
@@ -103,8 +97,7 @@ CREATE TABLE "eps_surprises" (
   "c_id" integer NOT NULL,
   "date" timestamp NOT NULL,
   "actual" float(8) NOT NULL,
-  "estimate" float(8) NOT NULL,
-  UNIQUE ("c_id", "date")
+  "estimate" float(8) NOT NULL
 );
 
 CREATE TABLE "eps_estimates" (
@@ -115,8 +108,7 @@ CREATE TABLE "eps_estimates" (
   "epsHigh" float(8) NOT NULL,
   "epsLow" float(8) NOT NULL,
   "numberAnalysts" integer NOT NULL,
-  "freq" varchar(64) NOT NULL,
-  UNIQUE ("c_id", "date")
+  "freq" varchar(64) NOT NULL
 );
 
 CREATE TABLE "revenue_estimates" (
@@ -127,8 +119,7 @@ CREATE TABLE "revenue_estimates" (
   "revenueHigh" bigint NOT NULL,
   "revenueLow" bigint NOT NULL,
   "numberAnalysts" integer NOT NULL,
-  "freq" varchar(64) NOT NULL,
-  UNIQUE ("c_id", "date")
+  "freq" varchar(64) NOT NULL
 );
 
 CREATE TABLE "upgrades_downgrades" (
@@ -138,8 +129,7 @@ CREATE TABLE "upgrades_downgrades" (
   "company" varchar(64) NOT NULL,
   "fromGrade" varchar(64) NOT NULL,
   "toGrade" varchar(64) NOT NULL,
-  "action" varchar(64) NOT NULL,
-  UNIQUE ("c_id", "date", "company")
+  "action" varchar(64) NOT NULL
 );
 
 CREATE TABLE "earnings_calendars" (
@@ -151,8 +141,7 @@ CREATE TABLE "earnings_calendars" (
   "hour" varchar(8) NOT NULL,
   "quarter" integer NOT NULL,
   "revenueActual" bigint NOT NULL,
-  "revenueEstimate" bigint NOT NULL,
-  UNIQUE ("c_id", "date")
+  "revenueEstimate" bigint NOT NULL
 );
 
 CREATE TABLE "crypto" (
@@ -171,8 +160,7 @@ CREATE TABLE "crypto_candles" (
   "low" float(8) NOT NULL,
   "close" float(8) NOT NULL,
   "volume" bigint NOT NULL,
-  "resolution" varchar(2) NOT NULL,
-  UNIQUE ("c_id", "date", "resolution")
+  "resolution" varchar(2) NOT NULL
 );
 
 ALTER TABLE "sec_sentiment" ADD FOREIGN KEY ("c_id") REFERENCES "companies" ("id");
@@ -198,3 +186,27 @@ ALTER TABLE "upgrades_downgrades" ADD FOREIGN KEY ("c_id") REFERENCES "companies
 ALTER TABLE "earnings_calendars" ADD FOREIGN KEY ("c_id") REFERENCES "companies" ("id");
 
 ALTER TABLE "crypto_candles" ADD FOREIGN KEY ("c_id") REFERENCES "crypto" ("id");
+
+CREATE UNIQUE INDEX ON "sec_sentiment" ("c_id", "date", "form", "access_number");
+
+CREATE UNIQUE INDEX ON "sec_similarity" ("c_id", "date", "form", "access_number");
+
+CREATE UNIQUE INDEX ON "dividends" ("c_id", "date");
+
+CREATE UNIQUE INDEX ON "stocks_candles" ("c_id", "date", "resolution");
+
+CREATE UNIQUE INDEX ON "splits" ("c_id", "date");
+
+CREATE UNIQUE INDEX ON "trends" ("c_id", "date");
+
+CREATE UNIQUE INDEX ON "eps_surprises" ("c_id", "date");
+
+CREATE UNIQUE INDEX ON "eps_estimates" ("c_id", "date");
+
+CREATE UNIQUE INDEX ON "revenue_estimates" ("c_id", "date");
+
+CREATE UNIQUE INDEX ON "upgrades_downgrades" ("c_id", "date");
+
+CREATE UNIQUE INDEX ON "earnings_calendars" ("c_id", "date");
+
+CREATE UNIQUE INDEX ON "crypto_candles" ("c_id", "date", "resolution");
