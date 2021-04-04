@@ -1,6 +1,6 @@
 from sqlalchemy import (
-    BigInteger, Column, DateTime, Float, ForeignKey, Integer,
-    MetaData, String, Table, Text, UniqueConstraint, text
+    BigInteger, Column, DateTime, Float, ForeignKey, Index,
+    Integer, MetaData, String, Table, Text, text
 )
 
 metadata = MetaData()
@@ -53,7 +53,7 @@ crypto_candles = Table(
     Column('close', Float, nullable=False),
     Column('volume', BigInteger, nullable=False),
     Column('resolution', String(2), nullable=False),
-    UniqueConstraint('c_id', 'date', 'resolution')
+    Index('crypto_candles_c_id_date_resolution_idx', 'c_id', 'date', 'resolution', unique=True)
 )
 
 
@@ -64,7 +64,7 @@ dividends = Table(
     Column('date', DateTime, nullable=False),
     Column('amount', Float, nullable=False),
     Column('adj_amount', Float, nullable=False),
-    UniqueConstraint('c_id', 'date')
+    Index('dividends_c_id_date_idx', 'c_id', 'date', unique=True)
 )
 
 
@@ -79,7 +79,7 @@ earnings_calendars = Table(
     Column('quarter', Integer, nullable=False),
     Column('revenueActual', BigInteger, nullable=False),
     Column('revenueEstimate', BigInteger, nullable=False),
-    UniqueConstraint('c_id', 'date')
+    Index('earnings_calendars_c_id_date_idx', 'c_id', 'date', unique=True)
 )
 
 
@@ -93,7 +93,7 @@ eps_estimates = Table(
     Column('epsLow', Float, nullable=False),
     Column('numberAnalysts', Integer, nullable=False),
     Column('freq', String(64), nullable=False),
-    UniqueConstraint('c_id', 'date')
+    Index('eps_estimates_c_id_date_idx', 'c_id', 'date', unique=True)
 )
 
 
@@ -104,7 +104,7 @@ eps_surprises = Table(
     Column('date', DateTime, nullable=False),
     Column('actual', Float, nullable=False),
     Column('estimate', Float, nullable=False),
-    UniqueConstraint('c_id', 'date')
+    Index('eps_surprises_c_id_date_idx', 'c_id', 'date', unique=True)
 )
 
 
@@ -118,7 +118,7 @@ revenue_estimates = Table(
     Column('revenueLow', BigInteger, nullable=False),
     Column('numberAnalysts', Integer, nullable=False),
     Column('freq', String(64), nullable=False),
-    UniqueConstraint('c_id', 'date')
+    Index('revenue_estimates_c_id_date_idx', 'c_id', 'date', unique=True)
 )
 
 
@@ -138,7 +138,7 @@ sec_sentiment = Table(
     Column('constraining', Float, nullable=False),
     Column('modal_strong', Float, nullable=False),
     Column('modal_moderate', Float, nullable=False),
-    UniqueConstraint('c_id', 'date', 'form', 'access_number')
+    Index('sec_sentiment_c_id_date_form_access_number_idx', 'c_id', 'date', 'form', 'access_number', unique=True)
 )
 
 
@@ -154,7 +154,7 @@ sec_similarity = Table(
     Column('item1A', Float, nullable=False),
     Column('item7', Float, nullable=False),
     Column('item7A', Float, nullable=False),
-    UniqueConstraint('c_id', 'date', 'form', 'access_number')
+    Index('sec_similarity_c_id_date_form_access_number_idx', 'c_id', 'date', 'form', 'access_number', unique=True)
 )
 
 
@@ -165,7 +165,7 @@ splits = Table(
     Column('date', DateTime, nullable=False),
     Column('fromFactor', Float, nullable=False),
     Column('toFactor', Float, nullable=False),
-    UniqueConstraint('c_id', 'date')
+    Index('splits_c_id_date_idx', 'c_id', 'date', unique=True)
 )
 
 
@@ -180,7 +180,7 @@ stocks_candles = Table(
     Column('close', Float, nullable=False),
     Column('volume', BigInteger, nullable=False),
     Column('resolution', String(2), nullable=False),
-    UniqueConstraint('c_id', 'date', 'resolution')
+    Index('stocks_candles_c_id_date_resolution_idx', 'c_id', 'date', 'resolution', unique=True)
 )
 
 
@@ -194,7 +194,7 @@ trends = Table(
     Column('sell', Integer, nullable=False),
     Column('strongBuy', Integer, nullable=False),
     Column('strongSell', Integer, nullable=False),
-    UniqueConstraint('c_id', 'date')
+    Index('trends_c_id_date_idx', 'c_id', 'date', unique=True)
 )
 
 
@@ -207,5 +207,5 @@ upgrades_downgrades = Table(
     Column('fromGrade', String(64), nullable=False),
     Column('toGrade', String(64), nullable=False),
     Column('action', String(64), nullable=False),
-    UniqueConstraint('c_id', 'date', 'company')
+    Index('upgrades_downgrades_c_id_date_idx', 'c_id', 'date', unique=True)
 )
