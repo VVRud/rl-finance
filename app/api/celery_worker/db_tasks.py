@@ -1,14 +1,16 @@
 from async_property import async_property
 from databases.core import logger
 from db import PgCrud, MongoCrud
+from celery import Task
+
 from asyncpg.exceptions import ConnectionDoesNotExistError
 from asyncpg.exceptions._base import InterfaceError
-from celery import Task
+from aiohttp import ContentTypeError
 
 
 class PostgresTask(Task):
     _db = None
-    autoretry_for = (InterfaceError, ConnectionDoesNotExistError)
+    autoretry_for = (InterfaceError, ConnectionDoesNotExistError, ContentTypeError)
     retry_kwargs = {"max_retries": 12, "countdown": 10}
 
     @async_property
@@ -26,6 +28,8 @@ class PostgresTask(Task):
 
 class MongoTask(Task):
     _db = None
+    autoretry_for = (ContentTypeError, )
+    retry_kwargs = {"max_retries": 12, "countdown": 10}
 
     @async_property
     async def db(self):
