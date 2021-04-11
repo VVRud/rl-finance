@@ -24,11 +24,12 @@ async def latest_retrieve_stock_candles(self, symbol: str, c_id: int, resolution
 
 @celery_app.task(name="company_news_latest", base=MongoTask, bind=True)
 async def latest_retrieve_company_news(self, symbol: str, c_id: int):
-    result = await fh.get_company_news(symbol)
     latest = await (await self.db).get_company_news(symbol)
-    result = [res for res in result if res["date"] > latest[0]["date"]]
+    startdate = latest[0]["date"]
+    enddate = datetime.datetime.now()
+    result = await fh.get_company_news(symbol, startdate, enddate)
     if len(result) != 0:
-        await (await self.db).insert_balance_sheets(fill_name_value(result, "c_id", c_id))
+        await (await self.db).insert_company_news(fill_name_value(result, "c_id", c_id))
 
 
 @celery_app.task(name="balance_sheets_latest", base=MongoTask, bind=True)
