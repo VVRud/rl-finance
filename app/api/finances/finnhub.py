@@ -300,16 +300,28 @@ class FinnHub(FinnnhubThrottler):
         }
 
     async def get_tickers(self, symbol: str, date: datetime.datetime, limit: int, skip: int):
-        # path = "/stock/tick"
-        # params = {
-        #     "symbol": symbol,
-        #     "date": date.isoformat(),
-        #     "limit": limit,
-        #     "skip": skip,
-        #     "format": "csv",
-        #     "token": self.apikey
-        # }
-        raise NotImplementedError()
+        path = "/stock/tick"
+        params = {
+            "symbol": symbol,
+            "date": date.date().isoformat(),
+            "limit": limit,
+            "skip": skip,
+            "format": "csv",
+            "token": self.apikey
+        }
+        async with await self.make_request("GET", self.url + path, params=params) as response:
+            result = await response.json()
+
+        data = [{
+            "price": result["p"][i],
+            "date": datetime.datetime.fromtimestamp(result["t"][i] / 1000.0),
+            "volume": result["v"][i],
+            "conditions": result["c"][i],
+            "exchange": result["x"][i]
+        } for i in range(len(result["t"]))
+        ]
+
+        return data, result["total"]
 
     async def get_latest_bid_ask(self, symbol: str):
         path = "/stock/bidask"
@@ -326,6 +338,32 @@ class FinnHub(FinnnhubThrottler):
             "ask_volume": result["av"],
             "bid_volume": result["bv"]
         }
+
+    async def get_historical_bid_ask(self, symbol: str, date: datetime.datetime, limit: int, skip: int):
+        path = "/stock/bbo"
+        params = {
+            "symbol": symbol,
+            "date": date.date().isoformat(),
+            "limit": limit,
+            "skip": skip,
+            "format": "csv",
+            "token": self.apikey
+        }
+        async with await self.make_request("GET", self.url + path, params=params) as response:
+            result = await response.json()
+
+        data = [{
+            "ask": result["a"][i],
+            "ask_volume": result["av"][i],
+            "ask_exchange": result["ax"][i],
+            "bid": result["b"][i],
+            "bid_volume": result["bv"][i],
+            "bid_exchange": result["bx"][i],
+            "date": datetime.datetime.fromtimestamp(result["t"][i] / 1000.0)
+        } for i in range(len(result["t"]))
+        ]
+
+        return data, result["total"]
 
     async def get_splits(self, symbol: str, _from: datetime.datetime, _to: datetime.datetime):
         path = "/stock/split"

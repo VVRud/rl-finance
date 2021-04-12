@@ -5,7 +5,8 @@ import asyncio
 import aiohttp
 from redis import Redis
 from gql import Client
-from gql.transport.requests import RequestsHTTPTransport
+from gql.transport.aiohttp import AIOHTTPTransport
+# from gql.transport.requests import RequestsHTTPTransport
 
 
 class Limit():
@@ -87,14 +88,14 @@ class FinimizeThrottler(BasicThrottler):
         self.url = url
         self.headers = headers
 
-        self.transport = RequestsHTTPTransport(url=self.url, headers=self.headers)
+        self.transport = AIOHTTPTransport(url=self.url, headers=self.headers)
         self.client = Client(transport=self.transport)
 
         super(FinimizeThrottler, self).__init__(limits)
 
     async def make_request(self, *args, **kwargs):
         await self.acquire()
-        return self.client.execute(*args, **kwargs)
+        return await self.client.execute_async(*args, **kwargs)
 
     async def close(self):
         await self.transport.close()

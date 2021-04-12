@@ -54,7 +54,7 @@ class Finimize(FinimizeThrottler):
             "tagName": None
         }
 
-        if content_type is None:
+        if after is None:
             query = self.first_query
         else:
             query = self.pagination_query
