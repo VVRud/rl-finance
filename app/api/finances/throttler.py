@@ -90,13 +90,11 @@ class FinimizeThrottler(BasicThrottler):
         self.url = url
         self.headers = headers
 
-        self.transport = AIOHTTPTransport(url=self.url, headers=self.headers)
-
         super(FinimizeThrottler, self).__init__(limits)
 
     async def make_request(self, *args, **kwargs):
         await self.acquire()
-        async with Client(transport=self.transport) as session:
+        async with Client(transport=AIOHTTPTransport(url=self.url, headers=self.headers)) as session:
             result = await session.execute(*args, **kwargs)
         return result
 
