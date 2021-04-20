@@ -1,3 +1,4 @@
+import logging
 from os import getenv
 import time
 from typing import List
@@ -5,8 +6,9 @@ import asyncio
 import aiohttp
 from redis import Redis
 from gql import Client
-from gql.transport.aiohttp import AIOHTTPTransport
-# from gql.transport.requests import RequestsHTTPTransport
+from gql.transport.aiohttp import AIOHTTPTransport, log
+
+log.setLevel(logging.ERROR)
 
 
 class Limit():
@@ -89,13 +91,14 @@ class FinimizeThrottler(BasicThrottler):
         self.headers = headers
 
         self.transport = AIOHTTPTransport(url=self.url, headers=self.headers)
-        self.client = Client(transport=self.transport)
 
         super(FinimizeThrottler, self).__init__(limits)
 
     async def make_request(self, *args, **kwargs):
         await self.acquire()
-        return await self.client.execute_async(*args, **kwargs)
+        async with Client(transport=self.transport) as session:
+            result = await session.execute(*args, **kwargs)
+        return result
 
     async def close(self):
         await self.transport.close()
