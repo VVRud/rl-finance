@@ -13,6 +13,8 @@ def fill_name_value(results, name, value):
 @celery_app.task(name="stock_candles_latest", base=PostgresTask, bind=True)
 async def latest_retrieve_stock_candles(self, symbol: str, c_id: int, resolution: str):
     latest = await (await self.db).get_stock_candles(symbol, resolution, 10)
+    if len(latest) == 0:
+        return
     startdate = latest[0]["date"]
     enddate = datetime.datetime.now()
     result = await fh.get_stock_candles(symbol, resolution, startdate, enddate)
@@ -25,6 +27,8 @@ async def latest_retrieve_stock_candles(self, symbol: str, c_id: int, resolution
 @celery_app.task(name="company_news_latest", base=MongoTask, bind=True)
 async def latest_retrieve_company_news(self, symbol: str, c_id: int):
     latest = await (await self.db).get_company_news(symbol)
+    if len(latest) == 0:
+        return
     startdate = latest[0]["date"]
     enddate = datetime.datetime.now()
     result = await fh.get_company_news(symbol, startdate, enddate)
@@ -71,6 +75,8 @@ async def latest_retrieve_similarities(self, symbol: str, c_id: int):
 @celery_app.task(name="sentiments_latest", base=PostgresTask, bind=True)
 async def latest_retrieve_sentiments(self, symbol: str, c_id: int):
     latest = await (await self.db).get_sec_sentiments(symbol, 10)
+    if len(latest) == 0:
+        return
     startdate = latest[0]["date"]
     enddate = datetime.datetime.now()
     result = await fh.get_sec_sentiments(await fh.get_filings(symbol, startdate, enddate))
@@ -81,6 +87,8 @@ async def latest_retrieve_sentiments(self, symbol: str, c_id: int):
 @celery_app.task(name="dividents_latest", base=PostgresTask, bind=True)
 async def latest_retrieve_dividents(self, symbol: str, c_id: int):
     latest = await (await self.db).get_dividends(symbol, 10)
+    if len(latest) == 0:
+        return
     startdate = latest[0]["date"]
     enddate = datetime.datetime.now()
     result = await fh.get_dividends(symbol, startdate, enddate)
@@ -91,6 +99,8 @@ async def latest_retrieve_dividents(self, symbol: str, c_id: int):
 @celery_app.task(name="press_releases_latest", base=MongoTask, bind=True)
 async def latest_retrieve_press_releases(self, symbol: str, c_id: int):
     latest = await (await self.db).get_press_releases(symbol)
+    if len(latest) == 0:
+        return
     startdate = latest[0]["date"]
     enddate = datetime.datetime.now()
     result = await fh.get_press_releases(symbol, startdate, enddate)
@@ -101,6 +111,8 @@ async def latest_retrieve_press_releases(self, symbol: str, c_id: int):
 @celery_app.task(name="splits_latest", base=PostgresTask, bind=True)
 async def latest_retrieve_splits(self, symbol: str, c_id: int):
     latest = await (await self.db).get_splits(symbol)
+    if len(latest) == 0:
+        return
     startdate = latest[0]["date"]
     enddate = datetime.datetime.now()
     result = await fh.get_splits(symbol, startdate, enddate)
@@ -147,6 +159,8 @@ async def latest_retrieve_revenue_estimates(self, symbol: str, c_id: int):
 @celery_app.task(name="upgrades_downgrades_latest", base=PostgresTask, bind=True)
 async def latest_retrieve_upgrades_downgrades(self, symbol: str, c_id: int):
     latest = await (await self.db).get_upgrades_downgrades(symbol)
+    if len(latest) == 0:
+        return
     startdate = latest[0]["date"]
     enddate = datetime.datetime.now()
     result = await fh.get_upgrades_downgrades(symbol, startdate, enddate)
@@ -157,6 +171,8 @@ async def latest_retrieve_upgrades_downgrades(self, symbol: str, c_id: int):
 @celery_app.task(name="earnings_calendars_latest", base=PostgresTask, bind=True)
 async def latest_retrieve_earnings_calendars(self, symbol: str, c_id: int):
     latest = await (await self.db).get_earnings_calendars(symbol)
+    if len(latest) == 0:
+        return
     startdate = latest[0]["date"]
     enddate = datetime.datetime.now()
     result = await fh.get_earnings_calendars(symbol, startdate, enddate)
@@ -167,6 +183,8 @@ async def latest_retrieve_earnings_calendars(self, symbol: str, c_id: int):
 @celery_app.task(name="crypto_candles_latest", base=PostgresTask, bind=True, queue="crypto_candles")
 async def latest_retrieve_crypto_candles(self, symbol: str, c_id: int, resolution: str):
     latest = await (await self.db).get_crypto_candles(symbol, resolution, 10)
+    if len(latest) == 0:
+        return
     startdate = latest[0]["date"]
     enddate = datetime.datetime.now()
     result = await fh.get_crypto_candles(symbol, resolution, startdate, enddate)
