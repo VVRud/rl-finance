@@ -14,6 +14,7 @@ class MongoModel(BaseModel):
 class RateLimitsModel(BaseModel):
     name: str
     opened: bool
+    used: int
     rate: int
     period: float
     retry: float

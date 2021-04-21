@@ -42,6 +42,7 @@ class Limit():
         return {
             "name": self.key,
             "opened": self.redis.llen(self.key) < self.rate,
+            "used": self.redis.llen(self.key),
             "rate": self.rate,
             "period": self.period,
             "retry": self.retry
