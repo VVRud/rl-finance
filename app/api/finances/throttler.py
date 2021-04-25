@@ -23,10 +23,14 @@ class Limit():
 
     def flush(self):
         while self.redis.llen(self.key):
-            now = time.time()
-            earliest = float(self.redis.lindex(self.key, 0).decode("utf-8"))
-            if now - earliest > self.period:
-                self.redis.lpop(self.key)
+            earliest = self.redis.lindex(self.key, 0)
+            if earliest is not None:
+                now = time.time()
+                earliest = float(earliest.decode("utf-8"))
+                if now - earliest > self.period:
+                    self.redis.lpop(self.key)
+                else:
+                    break
             else:
                 break
 
