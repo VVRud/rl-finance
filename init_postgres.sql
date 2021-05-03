@@ -57,6 +57,10 @@ CREATE TABLE "dividends" (
   "id" SERIAL UNIQUE PRIMARY KEY,
   "c_id" integer NOT NULL,
   "date" timestamp NOT NULL,
+  "pay_date" timestamp NOT NULL,
+  "declaration_date" timestamp NOT NULL,
+  "record_date" timestamp NOT NULL,
+  "currency" varchar(8) NOT NULL,
   "amount" float(8) NOT NULL,
   "adj_amount" float(8) NOT NULL
 );

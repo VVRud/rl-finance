@@ -62,6 +62,10 @@ dividends = Table(
     Column('id', Integer, primary_key=True, server_default=text("nextval('dividends_id_seq'::regclass)")),
     Column('c_id', ForeignKey('companies.id'), nullable=False),
     Column('date', DateTime, nullable=False),
+    Column('declaration_date', DateTime, nullable=False),
+    Column('pay_date', DateTime, nullable=False),
+    Column('record_date', DateTime, nullable=False),
+    Column('currency', String(8), nullable=False),
     Column('amount', Float, nullable=False),
     Column('adj_amount', Float, nullable=False),
     Index('dividends_c_id_date_idx', 'c_id', 'date', unique=True)

@@ -17,7 +17,7 @@ class FinnHub(FinnnhubThrottler):
         self.resolutions = ["1", "5", "15", "30", "60", "D", "W", "M"]
 
         super(FinnHub, self).__init__([
-            Limit(30, 1, 0.5, "fh:short"), Limit(150, 60, 5, "fh:long")
+            Limit(30, 1, 0.2, "fh:short"), Limit(145, 60, 1, "fh:long")
         ])
 
     # Fundamentals
@@ -93,6 +93,7 @@ class FinnHub(FinnnhubThrottler):
         for res in result:
             res["_id"] = res.pop("id")
             res["date"] = datetime.datetime.fromtimestamp(res.pop("datetime"))
+            res["symbol"] = res.pop("related")
             del res["image"]
             del res["category"]
         return result
@@ -203,16 +204,18 @@ class FinnHub(FinnnhubThrottler):
             params["freq"] = freq
             async with await self.make_request("GET", self.url + path, params=params) as response:
                 data = await response.json()
-                result += [{
-                    "date": datetime.datetime.fromisoformat(chunk["acceptedDate"].split(" ")[0]),
-                    "form": chunk["form"],
-                    "access_number": chunk["accessNumber"],
-                    "item1": chunk["item1"],
-                    "item2": chunk["item2"],
-                    "item1A": chunk["Item1A"],
-                    "item7": chunk["item7"],
-                    "item7A": chunk["Item7A"]
-                } for chunk in data.get("similarity", [])]
+                data = data.get("similarity", [])
+                if data is not None:
+                    result += [{
+                        "date": datetime.datetime.fromisoformat(chunk["acceptedDate"]),
+                        "form": chunk["form"],
+                        "access_number": chunk["accessNumber"],
+                        "item1": chunk["item1"],
+                        "item2": chunk["item2"],
+                        "item1A": chunk["Item1A"],
+                        "item7": chunk["item7"],
+                        "item7A": chunk["Item7A"]
+                    } for chunk in data]
         return result
 
     async def get_dividends(self, symbol: str, _from: datetime.datetime, _to: datetime.datetime) -> list:
@@ -227,6 +230,10 @@ class FinnHub(FinnnhubThrottler):
             data = await response.json()
             result = [{
                 "date": datetime.datetime.fromisoformat(chunk["date"]),
+                "pay_date": datetime.datetime.fromisoformat(chunk["payDate"]),
+                "record_date": datetime.datetime.fromisoformat(chunk["recordDate"]),
+                "declaration_date": datetime.datetime.fromisoformat(chunk["declarationDate"]),
+                "currency": chunk["currency"],
                 "amount": chunk["amount"],
                 "adj_amount": chunk["adjustedAmount"]
             } for chunk in data]
@@ -422,7 +429,7 @@ class FinnHub(FinnnhubThrottler):
             res["date"] = datetime.datetime.fromisoformat(res["period"])
             del res["period"]
             del res["symbol"]
-        return result
+        return [res for res in result if all(v is not None for _, v in res.items())]
 
     async def get_eps_estimates(self, symbol: str):
         path = "/stock/eps-estimate"
@@ -440,7 +447,7 @@ class FinnHub(FinnnhubThrottler):
                 del res["period"]
             data += [{**d, "freq": freq} for d in result["data"]]
 
-        return data
+        return [res for res in data if all(v is not None for _, v in res.items())]
 
     async def get_revenue_estimates(self, symbol: str):
         path = "/stock/revenue-estimate"
@@ -458,7 +465,7 @@ class FinnHub(FinnnhubThrottler):
                 del res["period"]
             data += [{**d, "freq": freq} for d in result["data"]]
 
-        return data
+        return [res for res in data if all(v is not None for _, v in res.items())]
 
     async def get_upgrades_downgrades(
         self, symbol: str = None,
@@ -496,7 +503,7 @@ class FinnHub(FinnnhubThrottler):
             res["date"] = datetime.datetime.fromisoformat(res["date"])
             del res["symbol"]
             del res["year"]
-        return result
+        return [res for res in result if all(v is not None for _, v in res.items())]
 
     # Crypto
     async def get_crypto_exchanges(self):
