@@ -7,7 +7,7 @@ CREATE TABLE "companies" (
   "city" varchar(128) NOT NULL,
   "address" varchar(128) NOT NULL,
   "exchange" varchar(32) NOT NULL,
-  "ipo" timestamp NOT NULL,
+  "ipo" timestamp,
   "share_outstanding" float(8) NOT NULL,
   "market_capitalization" float(8) NOT NULL,
   "employeeTotal" integer NOT NULL,

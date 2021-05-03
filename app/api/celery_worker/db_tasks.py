@@ -10,7 +10,7 @@ from aiohttp import ContentTypeError
 
 class PostgresTask(Task):
     _db = None
-    autoretry_for = (InterfaceError, ConnectionDoesNotExistError, ContentTypeError)
+    autoretry_for = (InterfaceError, ConnectionDoesNotExistError, ContentTypeError, )
     retry_kwargs = {"max_retries": 12, "countdown": 10}
 
     @async_property

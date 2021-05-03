@@ -84,8 +84,8 @@ async def latest_retrieve_sentiments(self, symbol: str, c_id: int):
         await (await self.db).insert_sec_sentiment(fill_name_value(result, "c_id", c_id))
 
 
-@celery_app.task(name="dividents_latest", base=PostgresTask, bind=True)
-async def latest_retrieve_dividents(self, symbol: str, c_id: int):
+@celery_app.task(name="dividends_latest", base=PostgresTask, bind=True)
+async def latest_retrieve_dividends(self, symbol: str, c_id: int):
     latest = await (await self.db).get_dividends(symbol, 10)
     if len(latest) == 0:
         return

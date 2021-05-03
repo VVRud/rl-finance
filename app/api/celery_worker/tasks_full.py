@@ -15,11 +15,15 @@ async def full_retrieve_stock_candles(
     self, symbol: str, c_id: int, resolution: str,
     startdate: datetime.datetime, enddate: datetime.datetime
 ):
+#     while True:
     result = await fh.get_stock_candles(symbol, resolution, startdate, enddate)
     if len(result) != 0:
         result = fill_name_value(result, "c_id", c_id)
         result = fill_name_value(result, "resolution", resolution)
         await (await self.db).insert_stock_candles(result)
+#         enddate = result[-1]["date"]
+#     else:
+#         break
 
 
 @celery_app.task(name="company_news_full", base=MongoTask, bind=True)
@@ -71,8 +75,8 @@ async def full_retrieve_sentiments(
         await (await self.db).insert_sec_sentiment(fill_name_value(result, "c_id", c_id))
 
 
-@celery_app.task(name="dividents_full", base=PostgresTask, bind=True)
-async def full_retrieve_dividents(
+@celery_app.task(name="dividends_full", base=PostgresTask, bind=True)
+async def full_retrieve_dividends(
     self, symbol: str, c_id: int,
     startdate: datetime.datetime, enddate: datetime.datetime
 ):

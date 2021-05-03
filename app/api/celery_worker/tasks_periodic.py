@@ -56,7 +56,7 @@ async def update_monthly(self):
     for company in companies:
         await celery_app.send_task("stock_candles_latest", args=(company["symbol"], company["id"], "M"))
         await celery_app.send_task("sentiments_latest", args=(company["symbol"], company["id"]))
-        await celery_app.send_task("dividents_latest", args=(company["symbol"], company["id"]))
+        await celery_app.send_task("dividends_latest", args=(company["symbol"], company["id"]))
         await celery_app.send_task("press_releases_latest", args=(company["symbol"], company["id"]))
         await celery_app.send_task("splits_latest", args=(company["symbol"], company["id"]))
         await celery_app.send_task("upgrades_downgrades_latest", args=(company["symbol"], company["id"]))

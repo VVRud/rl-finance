@@ -57,7 +57,7 @@ class FinnHub(FinnnhubThrottler):
                 "address": data["address"],
 
                 "exchange": data["exchange"],
-                "ipo": datetime.datetime.fromisoformat(data["ipo"]) if data["ipo"] != "" else datetime.datetime.min,
+                "ipo": datetime.datetime.fromisoformat(data["ipo"]) if data.get("ipo", "") != "" else None,
                 "share_outstanding": data["shareOutstanding"],
                 "market_capitalization": data["marketCapitalization"],
                 "employeeTotal": int(float(data["employeeTotal"])),
