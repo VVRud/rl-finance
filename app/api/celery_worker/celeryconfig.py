@@ -15,8 +15,11 @@ class CeleryConfig:
     task_acks_late = True
     task_acks_on_failure_or_timeout = False
     task_track_started = True
+    worker_prefetch_multiplier = 1
     task_serializer = "pickle"
-    accept_content = ["pickle"]
+    accept_content = ["pickle", "application/json"]
+    task_queue_max_priority = 10
+    task_default_priority = 5
 
     beat_schedule = {
         "update_daily": {

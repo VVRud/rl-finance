@@ -4,6 +4,10 @@ from finances import fh
 from celery_worker.worker import celery_app
 from celery_worker.db_tasks import PostgresTask, MongoTask
 
+HORIZON_YEARS_MARKET = 10
+HORIZON_DAYS_MARKET = 21
+HORIZON_YEARS_NEWS_RELEASES = 3
+
 
 def fill_name_value(results, name, value):
     for i in range(len(results)):
@@ -11,7 +15,51 @@ def fill_name_value(results, name, value):
     return results
 
 
-@celery_app.task(name="stock_candles_full", base=PostgresTask, bind=True, queue="stock_candles")
+@celery_app.task(name="add_company_parsing_tasks", base=PostgresTask, bind=True)
+async def add_company_parsing_tasks(self, symbol: str):
+    # Try to find company in current db
+    profile = await (await self.db).get_company(symbol)
+    if profile is None:
+        # If it is not in the db try to fetch it from Finnhub
+        profile = await fh.get_profile(symbol)
+        if profile is not None:
+            # If it is on Finnhub, add tasks
+            c_id = await (await self.db).insert_company(profile)
+
+            # Dealing with candles
+            enddate = datetime.datetime.now()
+            startdate = enddate - dateutil.relativedelta.relativedelta(years=HORIZON_YEARS_MARKET)
+            if profile["ipo"] is not None:
+                startdate = max(startdate, profile["ipo"])
+            for resolution in fh.resolutions:
+                await celery_app.send_task("stock_candles_full", args=(symbol, c_id, resolution, startdate, enddate))
+
+            await celery_app.send_task("sentiments_full", args=(symbol, c_id, startdate, enddate))
+            await celery_app.send_task("dividends_full", args=(symbol, c_id, startdate, enddate))
+            await celery_app.send_task("splits_full", args=(symbol, c_id, startdate, enddate))
+            await celery_app.send_task("upgrades_downgrades_full", args=(symbol, c_id, startdate, enddate))
+            await celery_app.send_task("earnings_calendars_full", args=(symbol, c_id, startdate, enddate))
+
+            await celery_app.send_task("balance_sheets_full", args=(symbol, c_id))
+            await celery_app.send_task("cash_flows_full", args=(symbol, c_id))
+            await celery_app.send_task("income_statements_full", args=(symbol, c_id))
+            await celery_app.send_task("similarities_full", args=(symbol, c_id))
+            await celery_app.send_task("trends_full", args=(symbol, c_id))
+            await celery_app.send_task("eps_surprises_full", args=(symbol, c_id))
+            await celery_app.send_task("eps_estimates_full", args=(symbol, c_id))
+            await celery_app.send_task("revenue_estimates_full", args=(symbol, c_id))
+
+            # Dealing with news and press releases
+            enddate = datetime.datetime.now()
+            startdate = enddate - dateutil.relativedelta.relativedelta(years=HORIZON_YEARS_NEWS_RELEASES)
+            if profile["ipo"] is not None:
+                startdate = max(startdate, profile["ipo"])
+            await celery_app.send_task("company_news_full", args=(symbol, c_id, startdate, enddate))
+            await celery_app.send_task("press_releases_full", args=(symbol, c_id, startdate, enddate))
+    return profile
+
+
+@celery_app.task(name="stock_candles_full", base=PostgresTask, bind=True)
 async def full_retrieve_stock_candles(
     self, symbol: str, c_id: int, resolution: str,
     startdate: datetime.datetime, enddate: datetime.datetime
@@ -195,7 +243,7 @@ async def full_retrieve_earnings_calendars(
         await (await self.db).insert_earnings_calendars(fill_name_value(result, "c_id", c_id))
 
 
-@celery_app.task(name="crypto_candles_full", base=PostgresTask, bind=True, queue="crypto_candles")
+@celery_app.task(name="crypto_candles_full", base=PostgresTask, bind=True)
 async def full_retrieve_crypto_candles(
     self, symbol: str, c_id: int, resolution: str,
     startdate: datetime.datetime, enddate: datetime.datetime

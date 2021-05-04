@@ -180,7 +180,7 @@ async def latest_retrieve_earnings_calendars(self, symbol: str, c_id: int):
         await (await self.db).insert_earnings_calendars(fill_name_value(result, "c_id", c_id))
 
 
-@celery_app.task(name="crypto_candles_latest", base=PostgresTask, bind=True, queue="crypto_candles")
+@celery_app.task(name="crypto_candles_latest", base=PostgresTask, bind=True)
 async def latest_retrieve_crypto_candles(self, symbol: str, c_id: int, resolution: str):
     latest = await (await self.db).get_crypto_candles(symbol, resolution, 10)
     if len(latest) == 0:

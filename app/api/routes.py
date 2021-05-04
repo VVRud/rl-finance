@@ -4,6 +4,7 @@ from fastapi import APIRouter, Query, Path, BackgroundTasks, Response, status
 from models import StatusModel
 from db import pg_db, mongo_db, data_functions, data_parameters
 from finances import fh, fm
+from celery_worker.worker import celery_app
 
 from background_tasks import add_company_tasks, add_crypto_tasks
 
@@ -36,11 +37,10 @@ async def add_stock_symbol(
     response: Response,
     symbol: str = Query(..., title="Symbol of the company", description="Symbol to be added to the database.")
 ):
-    profile = await fh.get_profile(symbol)
+    profile = celery_app.send_task("add_company_parsing_tasks", args=(symbol, ), priority=8).get()
     if profile is None:
         response.status_code = status.HTTP_404_NOT_FOUND
         return {"error": "Company not found."}
-    background_tasks.add_task(add_company_tasks, symbol=symbol, profile=profile)
     return profile
 
 
