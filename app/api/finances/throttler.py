@@ -83,8 +83,12 @@ class FinnnhubThrottler(BasicThrottler):
         super(FinnnhubThrottler, self).__init__(limits)
 
     async def make_request(self, *args, **kwargs):
-        await self.acquire()
-        return self.session.request(*args, **kwargs)
+        while True:
+            await self.acquire()
+            resp = await self.session.request(*args, **kwargs)
+            if resp.ok:
+                break
+        return resp
 
     async def close(self):
         await self.session.close()

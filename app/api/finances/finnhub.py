@@ -20,7 +20,19 @@ class FinnHub(FinnnhubThrottler):
             Limit(30, 1, 0.5, "fh:short"), Limit(150, 60, 5, "fh:long")
         ])
 
-    # Fundamentals
+    def __transform_date(self, date):
+        if isinstance(date, str):
+            try:
+                return datetime.datetime.fromisoformat(date)
+            except ValueError:
+                return None
+        elif isinstance(date, (int, float)):
+            try:
+                return datetime.datetime.fromtimestamp(date)
+            except ValueError:
+                return None
+        return None
+
     async def __get_financials(self, params):
         path = "/stock/financials"
         result = []
@@ -28,13 +40,15 @@ class FinnHub(FinnnhubThrottler):
             params["freq"] = freq
             async with await self.make_request("GET", self.url + path, params=params) as response:
                 data = await response.json()
-                for res in data["financials"]:
-                    res["date"] = datetime.datetime.fromisoformat(res["period"])
-                    res["period"] = freq
-                    res["symbol"] = params["symbol"]
+                if data["financials"] is not None:
+                    for res in data["financials"]:
+                        res["date"] = self.__transform_date(res.get("period", ""))
+                        res["period"] = freq
+                        res["symbol"] = params["symbol"]
                 result += data["financials"]
         return result
 
+    # Fundamentals
     async def get_profile(self, symbol: str) -> dict:
         path = "/stock/profile"
         params = {
@@ -47,6 +61,10 @@ class FinnHub(FinnnhubThrottler):
 
         result = None
         if len(data) != 0:
+            try:
+                employees = int(float(data["employeeTotal"]))
+            except ValueError:
+                employees = -1
             result = {
                 "name": data["name"],
                 "symbol": data["ticker"],
@@ -57,10 +75,10 @@ class FinnHub(FinnnhubThrottler):
                 "address": data["address"],
 
                 "exchange": data["exchange"],
-                "ipo": datetime.datetime.fromisoformat(data["ipo"]) if data.get("ipo", "") != "" else None,
+                "ipo": self.__transform_date(data.get("ipo", "")),
                 "share_outstanding": data["shareOutstanding"],
                 "market_capitalization": data["marketCapitalization"],
-                "employeeTotal": int(float(data["employeeTotal"])),
+                "employeeTotal": employees,
 
                 "ggroup": data["ggroup"],
                 "gind": data["gind"],
@@ -92,7 +110,7 @@ class FinnHub(FinnnhubThrottler):
 
         for res in result:
             res["_id"] = res.pop("id")
-            res["date"] = datetime.datetime.fromtimestamp(res.pop("datetime"))
+            res["date"] = self.__transform_date(res.pop("datetime"))
             res["symbol"] = res.pop("related")
             del res["image"]
             del res["category"]
@@ -103,7 +121,7 @@ class FinnHub(FinnnhubThrottler):
             try:
                 res = {
                     "symbol": chunk["symbol"],
-                    "date": datetime.datetime.fromisoformat(chunk["datetime"]),
+                    "date": self.__transform_date(chunk.get("datetime", "")),
                     "headline": chunk["headline"],
                     "description": chunk["description"]
                 }
@@ -169,7 +187,7 @@ class FinnHub(FinnnhubThrottler):
             async with await self.make_request("GET", self.url + path, params=params) as response:
                 data = await response.json()
                 filings += [{
-                    "date": datetime.datetime.fromisoformat(chunk["acceptedDate"].split(" ")[0]),
+                    "date": self.__transform_date(chunk.get("acceptedDate")),
                     "access_number": chunk["accessNumber"],
                     "form": chunk["form"]
                 } for chunk in data]
@@ -207,7 +225,7 @@ class FinnHub(FinnnhubThrottler):
                 data = data.get("similarity", [])
                 if data is not None:
                     result += [{
-                        "date": datetime.datetime.fromisoformat(chunk["acceptedDate"]),
+                        "date": self.__transform_date(chunk.get("acceptedDate", "")),
                         "form": chunk["form"],
                         "access_number": chunk["accessNumber"],
                         "item1": chunk["item1"],
@@ -229,10 +247,10 @@ class FinnHub(FinnnhubThrottler):
         async with await self.make_request("GET", self.url + path, params=params) as response:
             data = await response.json()
             result = [{
-                "date": datetime.datetime.fromisoformat(chunk["date"]),
-                "pay_date": datetime.datetime.fromisoformat(chunk["payDate"]),
-                "record_date": datetime.datetime.fromisoformat(chunk["recordDate"]),
-                "declaration_date": datetime.datetime.fromisoformat(chunk["declarationDate"]),
+                "date": self.__transform_date(chunk.get("date", "")),
+                "pay_date": self.__transform_date(chunk.get("payDate", "")),
+                "record_date": self.__transform_date(chunk.get("recordDate", "")),
+                "declaration_date": self.__transform_date(chunk.get("declarationDate", "")),
                 "currency": chunk["currency"],
                 "amount": chunk["amount"],
                 "adj_amount": chunk["adjustedAmount"]
@@ -278,7 +296,7 @@ class FinnHub(FinnnhubThrottler):
         if result["s"] == "ok" and result["t"] is not None:
             result = [
                 {
-                    "date": datetime.datetime.fromtimestamp(result["t"][i]),
+                    "date": self.__transform_date(result["t"][i]),
                     "open": result["o"][i],
                     "high": result["h"][i],
                     "low": result["l"][i],
@@ -321,7 +339,7 @@ class FinnHub(FinnnhubThrottler):
 
         data = [{
             "price": result["p"][i],
-            "date": datetime.datetime.fromtimestamp(result["t"][i] / 1000.0),
+            "date": self.__transform_date(result["t"][i] / 1000.0),
             "volume": result["v"][i],
             "conditions": result["c"][i],
             "exchange": result["x"][i]
@@ -339,7 +357,7 @@ class FinnHub(FinnnhubThrottler):
         async with await self.make_request("GET", self.url + path, params=params) as response:
             result = await response.json()
         return {
-            "date": datetime.datetime.fromtimestamp(result["t"]),
+            "date": self.__transform_date(result["t"]),
             "ask": result["a"],
             "bid": result["b"],
             "ask_volume": result["av"],
@@ -366,7 +384,7 @@ class FinnHub(FinnnhubThrottler):
             "bid": result["b"][i],
             "bid_volume": result["bv"][i],
             "bid_exchange": result["bx"][i],
-            "date": datetime.datetime.fromtimestamp(result["t"][i] / 1000.0)
+            "date": self.__transform_date(result["t"][i] / 1000.0)
         } for i in range(len(result["t"]))
         ]
 
@@ -383,7 +401,7 @@ class FinnHub(FinnnhubThrottler):
         async with await self.make_request("GET", self.url + path, params=params) as response:
             result = await response.json()
         for res in result:
-            res["date"] = datetime.datetime.fromisoformat(res["date"])
+            res["date"] = self.__transform_date(res.get("date", ""))
             res["fromFactor"] = float(res["fromFactor"])
             res["toFactor"] = float(res["toFactor"])
             del res["symbol"]
@@ -399,8 +417,7 @@ class FinnHub(FinnnhubThrottler):
         async with await self.make_request("GET", self.url + path, params=params) as response:
             result = await response.json()
         for res in result:
-            res["date"] = datetime.datetime.fromisoformat(res["period"])
-            del res["period"]
+            res["date"] = self.__transform_date(res.pop("period", ""))
             del res["symbol"]
         return result
 
@@ -412,8 +429,7 @@ class FinnHub(FinnnhubThrottler):
         }
         async with await self.make_request("GET", self.url + path, params=params) as response:
             result = await response.json()
-        result["date"] = datetime.datetime.fromisoformat(result["lastUpdated"])
-        del result["lastUpdated"]
+        result["date"] = self.__transform_date(result.pop("lastUpdated", ""))
         del result["symbol"]
         return result
 
@@ -426,8 +442,7 @@ class FinnHub(FinnnhubThrottler):
         async with await self.make_request("GET", self.url + path, params=params) as response:
             result = await response.json()
         for res in result:
-            res["date"] = datetime.datetime.fromisoformat(res["period"])
-            del res["period"]
+            res["date"] = self.__transform_date(res.pop("period", ""))
             del res["symbol"]
         return [res for res in result if all(v is not None for _, v in res.items())]
 
@@ -443,8 +458,7 @@ class FinnHub(FinnnhubThrottler):
             async with await self.make_request("GET", self.url + path, params=params) as response:
                 result = await response.json()
             for res in result["data"]:
-                res["date"] = datetime.datetime.fromisoformat(res["period"])
-                del res["period"]
+                res["date"] = self.__transform_date(res.pop("period", ""))
             data += [{**d, "freq": freq} for d in result["data"]]
 
         return [res for res in data if all(v is not None for _, v in res.items())]
@@ -461,8 +475,7 @@ class FinnHub(FinnnhubThrottler):
             async with await self.make_request("GET", self.url + path, params=params) as response:
                 result = await response.json()
             for res in result["data"]:
-                res["date"] = datetime.datetime.fromisoformat(res["period"])
-                del res["period"]
+                res["date"] = self.__transform_date(res.pop("period", ""))
             data += [{**d, "freq": freq} for d in result["data"]]
 
         return [res for res in data if all(v is not None for _, v in res.items())]
@@ -484,8 +497,7 @@ class FinnHub(FinnnhubThrottler):
         async with await self.make_request("GET", self.url + path, params=params) as response:
             result = await response.json()
         for res in result:
-            res["date"] = datetime.datetime.fromtimestamp(res["gradeTime"])
-            del res["gradeTime"]
+            res["date"] = self.__transform_date(res.pop("gradeTime"))
             del res["symbol"]
         return result
 
@@ -500,7 +512,7 @@ class FinnHub(FinnnhubThrottler):
         async with await self.make_request("GET", self.url + path, params=params) as response:
             result = (await response.json())["earningsCalendar"]
         for res in result:
-            res["date"] = datetime.datetime.fromisoformat(res["date"])
+            res["date"] = self.__transform_date(res.get("date", ""))
             del res["symbol"]
             del res["year"]
         return [res for res in result if all(v is not None for _, v in res.items())]
@@ -540,7 +552,7 @@ class FinnHub(FinnnhubThrottler):
         if result["s"] == "ok" and result["t"] is not None:
             result = [
                 {
-                    "date": datetime.datetime.fromtimestamp(result["t"][i]),
+                    "date": self.__transform_date(result["t"][i]),
                     "open": result["o"][i],
                     "close": result["c"][i],
                     "high": result["h"][i],

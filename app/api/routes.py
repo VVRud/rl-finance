@@ -6,7 +6,7 @@ from db import pg_db, mongo_db, data_functions, data_parameters
 from finances import fh, fm
 from celery_worker.worker import celery_app
 
-from background_tasks import add_company_tasks, add_crypto_tasks
+from background_tasks import add_crypto_tasks
 
 router = APIRouter()
 
@@ -37,11 +37,17 @@ async def add_stock_symbol(
     response: Response,
     symbol: str = Query(..., title="Symbol of the company", description="Symbol to be added to the database.")
 ):
-    profile = celery_app.send_task("add_company_parsing_tasks", args=(symbol, ), priority=8).get()
-    if profile is None:
-        response.status_code = status.HTTP_404_NOT_FOUND
-        return {"error": "Company not found."}
-    return profile
+    profile = await pg_db.get_company(symbol)
+    if profile is not None:
+        return profile
+
+    profile = await fh.get_profile(symbol)
+    if profile is not None:
+        celery_app.send_task("add_company_parsing_tasks", args=(symbol, profile), priority=8)
+        return profile
+
+    response.status_code = status.HTTP_404_NOT_FOUND
+    return {"error": "Company not found."}
 
 
 @router.get(

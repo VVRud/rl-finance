@@ -26,7 +26,7 @@ CREATE TABLE "companies" (
 CREATE TABLE "sec_sentiment" (
   "id" SERIAL UNIQUE PRIMARY KEY,
   "c_id" integer NOT NULL,
-  "date" timestamp NOT NULL,
+  "date" timestamp,
   "form" varchar(8) NOT NULL,
   "access_number" varchar(32) NOT NULL,
   "negative" float(8) NOT NULL,
@@ -43,7 +43,7 @@ CREATE TABLE "sec_sentiment" (
 CREATE TABLE "sec_similarity" (
   "id" SERIAL UNIQUE PRIMARY KEY,
   "c_id" integer NOT NULL,
-  "date" timestamp NOT NULL,
+  "date" timestamp,
   "form" varchar(8) NOT NULL,
   "access_number" varchar(32) NOT NULL,
   "item1" float(8) NOT NULL,
@@ -56,10 +56,10 @@ CREATE TABLE "sec_similarity" (
 CREATE TABLE "dividends" (
   "id" SERIAL UNIQUE PRIMARY KEY,
   "c_id" integer NOT NULL,
-  "date" timestamp NOT NULL,
-  "pay_date" timestamp NOT NULL,
-  "declaration_date" timestamp NOT NULL,
-  "record_date" timestamp NOT NULL,
+  "date" timestamp,
+  "pay_date" timestamp,
+  "declaration_date" timestamp,
+  "record_date" timestamp,
   "currency" varchar(8) NOT NULL,
   "amount" float(8) NOT NULL,
   "adj_amount" float(8) NOT NULL
@@ -68,7 +68,7 @@ CREATE TABLE "dividends" (
 CREATE TABLE "stocks_candles" (
   "id" SERIAL UNIQUE PRIMARY KEY,
   "c_id" integer NOT NULL,
-  "date" timestamp NOT NULL,
+  "date" timestamp,
   "open" float(8) NOT NULL,
   "high" float(8) NOT NULL,
   "low" float(8) NOT NULL,
@@ -80,7 +80,7 @@ CREATE TABLE "stocks_candles" (
 CREATE TABLE "splits" (
   "id" SERIAL UNIQUE PRIMARY KEY,
   "c_id" integer NOT NULL,
-  "date" timestamp NOT NULL,
+  "date" timestamp,
   "fromFactor" float(8) NOT NULL,
   "toFactor" float(8) NOT NULL
 );
@@ -88,7 +88,7 @@ CREATE TABLE "splits" (
 CREATE TABLE "trends" (
   "id" SERIAL UNIQUE PRIMARY KEY,
   "c_id" integer NOT NULL,
-  "date" timestamp NOT NULL,
+  "date" timestamp,
   "buy" integer NOT NULL,
   "hold" integer NOT NULL,
   "sell" integer NOT NULL,
@@ -99,7 +99,7 @@ CREATE TABLE "trends" (
 CREATE TABLE "eps_surprises" (
   "id" SERIAL UNIQUE PRIMARY KEY,
   "c_id" integer NOT NULL,
-  "date" timestamp NOT NULL,
+  "date" timestamp,
   "actual" float(8) NOT NULL,
   "estimate" float(8) NOT NULL
 );
@@ -107,7 +107,7 @@ CREATE TABLE "eps_surprises" (
 CREATE TABLE "eps_estimates" (
   "id" SERIAL UNIQUE PRIMARY KEY,
   "c_id" integer NOT NULL,
-  "date" timestamp NOT NULL,
+  "date" timestamp,
   "epsAvg" float(8) NOT NULL,
   "epsHigh" float(8) NOT NULL,
   "epsLow" float(8) NOT NULL,
@@ -118,7 +118,7 @@ CREATE TABLE "eps_estimates" (
 CREATE TABLE "revenue_estimates" (
   "id" SERIAL UNIQUE PRIMARY KEY,
   "c_id" integer NOT NULL,
-  "date" timestamp NOT NULL,
+  "date" timestamp,
   "revenueAvg" bigint NOT NULL,
   "revenueHigh" bigint NOT NULL,
   "revenueLow" bigint NOT NULL,
@@ -129,7 +129,7 @@ CREATE TABLE "revenue_estimates" (
 CREATE TABLE "upgrades_downgrades" (
   "id" SERIAL UNIQUE PRIMARY KEY,
   "c_id" integer NOT NULL,
-  "date" timestamp NOT NULL,
+  "date" timestamp,
   "company" varchar(64) NOT NULL,
   "fromGrade" varchar(64) NOT NULL,
   "toGrade" varchar(64) NOT NULL,
@@ -139,7 +139,7 @@ CREATE TABLE "upgrades_downgrades" (
 CREATE TABLE "earnings_calendars" (
   "id" SERIAL UNIQUE PRIMARY KEY,
   "c_id" integer NOT NULL,
-  "date" timestamp NOT NULL,
+  "date" timestamp,
   "epsActual" float(8) NOT NULL,
   "epsEstimate" float(8) NOT NULL,
   "hour" varchar(8) NOT NULL,
@@ -158,7 +158,7 @@ CREATE TABLE "crypto" (
 CREATE TABLE "crypto_candles" (
   "id" SERIAL UNIQUE PRIMARY KEY,
   "c_id" integer NOT NULL,
-  "date" timestamp NOT NULL,
+  "date" timestamp,
   "open" float(8) NOT NULL,
   "high" float(8) NOT NULL,
   "low" float(8) NOT NULL,

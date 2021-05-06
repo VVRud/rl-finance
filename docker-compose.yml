@@ -74,7 +74,7 @@ services:
       context: ./app
       dockerfile: Dockerfile.celery-worker
     environment:
-      LOG_LEVEL: INFO
+      LOG_LEVEL: ERROR
       C_FORCE_ROOT: 'true'
       FH_APIKEY: ${FH_APIKEY}
       WORKER_IS_SERVER: 1
@@ -114,7 +114,7 @@ services:
       context: ./app
       dockerfile: Dockerfile.celery-beat
     environment:
-      LOG_LEVEL: INFO
+      LOG_LEVEL: ERROR
       C_FORCE_ROOT: 'true'
       FH_APIKEY: ${FH_APIKEY}
       WORKER_IS_SERVER: 1
@@ -154,7 +154,7 @@ services:
       context: ./app
       dockerfile: Dockerfile.api
     environment:
-      LOG_LEVEL: info
+      LOG_LEVEL: error
       MAX_WORKERS: 4
       FH_APIKEY: ${FH_APIKEY}
 
