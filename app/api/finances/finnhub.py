@@ -45,7 +45,7 @@ class FinnHub(FinnnhubThrottler):
                         res["date"] = self.__transform_date(res.get("period", ""))
                         res["period"] = freq
                         res["symbol"] = params["symbol"]
-                result += data["financials"]
+                    result += data["financials"]
         return result
 
     # Fundamentals

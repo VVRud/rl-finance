@@ -6,20 +6,22 @@ class CeleryConfig:
     imports = ["celery_worker.tasks_periodic", "celery_worker.tasks_full", "celery_worker.tasks_latest"]
 
     broker_url = (
-        f"amqp://{os.getenv('RABBIT_USERNAME')}:{os.getenv('RABBIT_PASSWORD')}@"
-        f"{os.getenv('RABBIT_HOST')}:{os.getenv('RABBIT_PORT')}/"
+        f"redis://:@{os.getenv('REDIS_HOST')}:{os.getenv('REDIS_PORT')}"
+        f"/{os.getenv('REDIS_WORKER_DB')}"
     )
-    result_backend = (
-        f"redis://:@{os.getenv('REDIS_HOST')}:{os.getenv('REDIS_PORT')}/0"
-    )
+    
     task_acks_late = True
     task_acks_on_failure_or_timeout = False
     task_track_started = True
-    worker_prefetch_multiplier = 1
-    task_serializer = "pickle"
-    accept_content = ["pickle", "application/json"]
     task_queue_max_priority = 10
     task_default_priority = 5
+    
+    worker_max_tasks_per_child = 1
+    worker_prefetch_multiplier = 1
+    
+    task_serializer = "pickle"
+    accept_content = ["pickle"]
+    broker_heartbeat = 60
 
     beat_schedule = {
         "update_daily": {

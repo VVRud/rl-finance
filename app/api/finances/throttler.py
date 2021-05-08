@@ -17,7 +17,8 @@ class Limit():
         self.period = period
         self.retry = retry
         self.redis = Redis(
-            host=getenv("REDIS_HOST"), port=getenv("REDIS_PORT"), db=1
+            host=getenv("REDIS_HOST"), port=getenv("REDIS_PORT"),
+            db=int(float(getenv("REDIS_THROTTLER_DB")))
         )
         self.key = key
 
@@ -85,8 +86,15 @@ class FinnnhubThrottler(BasicThrottler):
     async def make_request(self, *args, **kwargs):
         while True:
             await self.acquire()
-            resp = await self.session.request(*args, **kwargs)
-            if resp.ok:
+
+            try:
+                resp = await self.session.request(*args, **kwargs)
+            except aiohttp.ClientOSError:
+                resp = None
+            except asyncio.TimeoutError:
+                resp = None
+
+            if resp is not None and resp.ok:
                 break
         return resp
 

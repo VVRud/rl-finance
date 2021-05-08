@@ -2,30 +2,16 @@ version: '3.5'
 
 services:
   redis:
-    container_name: redis
     image: redis:alpine
-    environment:
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
     networks:
       - internal_net
     volumes: 
+      - './redis.conf:/usr/local/etc/redis/redis.conf:ro'
       - 'redis_data:/data'
-    restart: always
-
-  rabbit:
-    container_name: rabbitmq
-    image: 'rabbitmq:alpine'
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBIT_USERNAME}
-      RABBITMQ_DEFAULT_PASS: ${RABBIT_PASSWORD}
-    networks:
-      - internal_net
-    volumes:
-      - 'rabbitmq_data:/var/lib/rabbitmq'
+    entrypoint: redis-server /usr/local/etc/redis/redis.conf
     restart: always
 
   postgres:
-    container_name: postgresql
     image: postgres:alpine
     environment:
       POSTGRES_USER: ${POSTGRES_USERNAME}
@@ -35,25 +21,23 @@ services:
       - internal_net
     volumes:
       - 'postgresql_data:/var/lib/postgresql/data'
-      - './init_postgres.sql:/docker-entrypoint-initdb.d/init_postgres.sql'
+      - './init_postgres.sql:/docker-entrypoint-initdb.d/init_postgres.sql:ro'
     restart: always
 
   bouncer:
-    container_name: pgbouncer
     build:
       context: ./pgbouncer
       dockerfile: Dockerfile
     networks:
       - internal_net
     volumes:
-      - './pgbouncer/config/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini'
-      - './pgbouncer/config/userlist.txt:/etc/pgbouncer/userlist.txt'
+      - './pgbouncer/config/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro'
+      - './pgbouncer/config/userlist.txt:/etc/pgbouncer/userlist.txt:ro'
     depends_on:
       - postgres
     restart: always
 
   mongo:
-    container_name: mongodb
     image: mongo:latest
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
@@ -65,17 +49,17 @@ services:
       - internal_net
     volumes:
       - 'mongodb_data:/data/db'
-      - './init_mongo.sh:/docker-entrypoint-initdb.d/init_mongo.sh'
+      - './init_mongo.sh:/docker-entrypoint-initdb.d/init_mongo.sh:ro'
     restart: always
-
+    
   worker:
-    container_name: celery_worker
     build:
       context: ./app
       dockerfile: Dockerfile.celery-worker
     environment:
       LOG_LEVEL: ERROR
       C_FORCE_ROOT: 'true'
+      
       FH_APIKEY: ${FH_APIKEY}
       WORKER_IS_SERVER: 1
 
@@ -93,23 +77,29 @@ services:
 
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-
-      RABBIT_HOST: rabbit
-      RABBIT_PORT: 5672
-      RABBIT_USERNAME: ${RABBIT_USERNAME}
-      RABBIT_PASSWORD: ${RABBIT_PASSWORD}
+      REDIS_WORKER_DB: ${REDIS_WORKER_DB}
+      REDIS_THROTTLER_DB: ${REDIS_THROTTLER_DB}
     networks:
       - internal_net
     depends_on:
       - redis
-      - rabbit
       - mongo
       - bouncer
     restart: always
+    
+  flower:
+    image: mher/flower
+    environment:
+      - CELERY_BROKER_URL=redis://:@redis:6379/${REDIS_WORKER_DB}
+      - FLOWER_PORT=8892
+    networks:
+      - internal_net
+    ports:
+      - 8892:8892
+    depends_on:
+      - worker
 
   beat:
-    container_name: celery_beat
     build:
       context: ./app
       dockerfile: Dockerfile.celery-beat
@@ -133,23 +123,15 @@ services:
 
       REDIS_HOST: redis
       REDIS_PORT: 6379
-
-      RABBIT_HOST: rabbit
-      RABBIT_PORT: 5672
-      RABBIT_USERNAME: ${RABBIT_USERNAME}
-      RABBIT_PASSWORD: ${RABBIT_PASSWORD}
+      REDIS_WORKER_DB: ${REDIS_WORKER_DB}
+      REDIS_THROTTLER_DB: ${REDIS_THROTTLER_DB}
     networks:
       - internal_net
     depends_on:
-      - redis
-      - rabbit
-      - mongo
-      - bouncer
       - worker
     restart: always
 
   api:
-    container_name: api
     build:
       context: ./app
       dockerfile: Dockerfile.api
@@ -175,28 +157,20 @@ services:
 
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-
-      RABBIT_HOST: rabbit
-      RABBIT_PORT: 5672
-      RABBIT_USERNAME: ${RABBIT_USERNAME}
-      RABBIT_PASSWORD: ${RABBIT_PASSWORD}
+      REDIS_WORKER_DB: ${REDIS_WORKER_DB}
+      REDIS_THROTTLER_DB: ${REDIS_THROTTLER_DB}
     networks:
       - internal_net
     ports:
       - '8090:80'
     depends_on:
-      - redis
-      - bouncer
-      - mongo
-      - worker
+      - beat
     restart: always
 
 volumes:
   redis_data: null
   postgresql_data: null
   mongodb_data: null
-  rabbitmq_data: null
 
 networks:
   internal_net:

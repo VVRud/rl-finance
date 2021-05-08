@@ -43,7 +43,8 @@ async def add_stock_symbol(
 
     profile = await fh.get_profile(symbol)
     if profile is not None:
-        celery_app.send_task("add_company_parsing_tasks", args=(symbol, profile), priority=8)
+        c_id = await pg_db.insert_company(profile)
+        celery_app.send_task("add_company_parsing_tasks", args=(symbol, c_id, profile["ipo"]), priority=8)
         return profile
 
     response.status_code = status.HTTP_404_NOT_FOUND
