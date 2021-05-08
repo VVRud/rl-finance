@@ -22,8 +22,10 @@ async def add_company_parsing_tasks(symbol: str, c_id: int, ipo: datetime.dateti
     startdate = enddate - dateutil.relativedelta.relativedelta(years=HORIZON_YEARS_MARKET)
     if ipo is not None:
         startdate = max(startdate, ipo)
-    for resolution in fh.resolutions:
-        await celery_app.send_task("stock_candles_full", args=(symbol, c_id, resolution, startdate, enddate))
+    for resolution, priority in zip(fh.resolutions, fh.priorities):
+        await celery_app.send_task(
+            "stock_candles_full", args=(symbol, c_id, resolution, startdate, enddate), priority=priority
+        )
 
     await celery_app.send_task("sentiments_full", args=(symbol, c_id, startdate, enddate))
     await celery_app.send_task("dividends_full", args=(symbol, c_id, startdate, enddate))

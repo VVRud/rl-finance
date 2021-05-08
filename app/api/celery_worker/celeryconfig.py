@@ -9,6 +9,10 @@ class CeleryConfig:
         f"redis://:@{os.getenv('REDIS_HOST')}:{os.getenv('REDIS_PORT')}"
         f"/{os.getenv('REDIS_WORKER_DB')}"
     )
+    result_backend = (
+        f"redis://:@{os.getenv('REDIS_HOST')}:{os.getenv('REDIS_PORT')}"
+        f"/{os.getenv('REDIS_RESULTS_DB')}"
+    )
     
     task_acks_late = True
     task_acks_on_failure_or_timeout = False

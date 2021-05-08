@@ -78,6 +78,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_WORKER_DB: ${REDIS_WORKER_DB}
+      REDIS_RESULTS_DB: ${REDIS_RESULTS_DB}
       REDIS_THROTTLER_DB: ${REDIS_THROTTLER_DB}
     networks:
       - internal_net
@@ -91,6 +92,7 @@ services:
     image: mher/flower
     environment:
       - CELERY_BROKER_URL=redis://:@redis:6379/${REDIS_WORKER_DB}
+#       - FLOWER_BASIC_AUTH=${FLOWER_USER}:${FLOWER_PASS}
       - FLOWER_PORT=8892
     networks:
       - internal_net
@@ -106,6 +108,7 @@ services:
     environment:
       LOG_LEVEL: ERROR
       C_FORCE_ROOT: 'true'
+      
       FH_APIKEY: ${FH_APIKEY}
       WORKER_IS_SERVER: 1
 
@@ -124,6 +127,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_WORKER_DB: ${REDIS_WORKER_DB}
+      REDIS_RESULTS_DB: ${REDIS_RESULTS_DB}
       REDIS_THROTTLER_DB: ${REDIS_THROTTLER_DB}
     networks:
       - internal_net
@@ -158,6 +162,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_WORKER_DB: ${REDIS_WORKER_DB}
+      REDIS_RESULTS_DB: ${REDIS_RESULTS_DB}
       REDIS_THROTTLER_DB: ${REDIS_THROTTLER_DB}
     networks:
       - internal_net

@@ -15,6 +15,7 @@ class FinnHub(FinnnhubThrottler):
             )
 
         self.resolutions = ["1", "5", "15", "30", "60", "D", "W", "M"]
+        self.priorities = [1, 2, 2, 4, 6, 6, 6, 6]
 
         super(FinnHub, self).__init__([
             Limit(30, 1, 0.5, "fh:short"), Limit(150, 60, 5, "fh:long")
