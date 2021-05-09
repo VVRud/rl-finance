@@ -13,16 +13,20 @@ class CeleryConfig:
         f"redis://:@{os.getenv('REDIS_HOST')}:{os.getenv('REDIS_PORT')}"
         f"/{os.getenv('REDIS_RESULTS_DB')}"
     )
-    
+
     task_acks_late = True
     task_acks_on_failure_or_timeout = False
     task_track_started = True
-    task_queue_max_priority = 10
     task_default_priority = 5
-    
+
+    broker_transport_options = {
+        'priority_steps': list(range(10)),
+        'queue_order_strategy': 'priority',
+    }
+
     worker_max_tasks_per_child = 1
     worker_prefetch_multiplier = 1
-    
+
     task_serializer = "pickle"
     accept_content = ["pickle"]
     broker_heartbeat = 60

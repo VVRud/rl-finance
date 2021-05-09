@@ -24,17 +24,16 @@ services:
       - './init_postgres.sql:/docker-entrypoint-initdb.d/init_postgres.sql:ro'
     restart: always
 
-  bouncer:
-    build:
-      context: ./pgbouncer
-      dockerfile: Dockerfile
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: database@finances.com
+      PGADMIN_DEFAULT_PASSWORD: admin
     networks:
       - internal_net
-    volumes:
-      - './pgbouncer/config/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro'
-      - './pgbouncer/config/userlist.txt:/etc/pgbouncer/userlist.txt:ro'
-    depends_on:
-      - postgres
+    ports:
+      - '8080:80'
     restart: always
 
   mongo:
@@ -63,8 +62,8 @@ services:
       FH_APIKEY: ${FH_APIKEY}
       WORKER_IS_SERVER: 1
 
-      POSTGRES_HOST: bouncer
-      POSTGRES_PORT: 6432
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
       POSTGRES_USERNAME: ${POSTGRES_USERNAME}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DATABASE: ${POSTGRES_DATABASE}
@@ -92,7 +91,7 @@ services:
     image: mher/flower
     environment:
       - CELERY_BROKER_URL=redis://:@redis:6379/${REDIS_WORKER_DB}
-#       - FLOWER_BASIC_AUTH=${FLOWER_USER}:${FLOWER_PASS}
+      - FLOWER_BASIC_AUTH=${FLOWER_USER}:${FLOWER_PASS}
       - FLOWER_PORT=8892
     networks:
       - internal_net
@@ -112,8 +111,8 @@ services:
       FH_APIKEY: ${FH_APIKEY}
       WORKER_IS_SERVER: 1
 
-      POSTGRES_HOST: bouncer
-      POSTGRES_PORT: 6432
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
       POSTGRES_USERNAME: ${POSTGRES_USERNAME}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DATABASE: ${POSTGRES_DATABASE}
@@ -144,8 +143,8 @@ services:
       MAX_WORKERS: 4
       FH_APIKEY: ${FH_APIKEY}
 
-      POSTGRES_HOST: bouncer
-      POSTGRES_PORT: 6432
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
       POSTGRES_USERNAME: ${POSTGRES_USERNAME}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DATABASE: ${POSTGRES_DATABASE}
