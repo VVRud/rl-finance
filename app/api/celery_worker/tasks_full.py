@@ -75,14 +75,12 @@ async def full_retrieve_company_news(
     startdate: datetime.datetime, enddate: datetime.datetime
 ):
     result = await fh.get_company_news(symbol, startdate, enddate)
-    if len(result) == 0 or startdate + dateutil.relativedelta.relativedelta(days=1) >= enddate:
-        return
-    prev_date = enddate
-    enddate = min([res["date"] for res in result])
-    if enddate == prev_date:
-        return
-    await (await self.db).insert_company_news(fill_name_value(result, "c_id", c_id))
-    await celery_app.send_task("company_news_full", args=(symbol, c_id, startdate, enddate))
+    if len(result) != 0 and startdate + dateutil.relativedelta.relativedelta(days=1) < enddate:
+        prev_date = enddate
+        enddate = min([res["date"] for res in result])
+        if enddate != prev_date:
+            await (await self.db).insert_company_news(fill_name_value(result, "c_id", c_id))
+            await celery_app.send_task("company_news_full", args=(symbol, c_id, startdate, enddate))
 
 
 @celery_app.task(name="balance_sheets_full", base=MongoTask, bind=True)
@@ -120,14 +118,12 @@ async def full_retrieve_sentiments(
 ):
     filings = await fh.get_filings(symbol, startdate, enddate)
     result = await fh.get_sec_sentiments(filings)
-    if len(result) == 0 or startdate + dateutil.relativedelta.relativedelta(days=1) >= enddate:
-        return
-    prev_date = enddate
-    enddate = min([res["date"] for res in result])
-    if enddate == prev_date:
-        return
-    await (await self.db).insert_sec_sentiment(fill_name_value(result, "c_id", c_id))
-    await celery_app.send_task("sentiments_full", args=(symbol, c_id, startdate, enddate))
+    if len(result) != 0 and startdate + dateutil.relativedelta.relativedelta(days=1) < enddate:
+        prev_date = enddate
+        enddate = min([res["date"] for res in result])
+        if enddate != prev_date:
+            await (await self.db).insert_sec_sentiment(fill_name_value(result, "c_id", c_id))
+            await celery_app.send_task("sentiments_full", args=(symbol, c_id, startdate, enddate))
 
 
 @celery_app.task(name="dividends_full", base=PostgresTask, bind=True)
@@ -136,14 +132,12 @@ async def full_retrieve_dividends(
     startdate: datetime.datetime, enddate: datetime.datetime
 ):
     result = await fh.get_dividends(symbol, startdate, enddate)
-    if len(result) == 0 or startdate + dateutil.relativedelta.relativedelta(days=1) >= enddate:
-        return
-    prev_date = enddate
-    enddate = min([res["date"] for res in result])
-    if enddate == prev_date:
-        return
-    await (await self.db).insert_dividends(fill_name_value(result, "c_id", c_id))
-    await celery_app.send_task("dividends_full", args=(symbol, c_id, startdate, enddate))
+    if len(result) != 0 and startdate + dateutil.relativedelta.relativedelta(days=1) < enddate:
+        prev_date = enddate
+        enddate = min([res["date"] for res in result])
+        if enddate != prev_date:
+            await (await self.db).insert_dividends(fill_name_value(result, "c_id", c_id))
+            await celery_app.send_task("dividends_full", args=(symbol, c_id, startdate, enddate))
 
 
 @celery_app.task(name="press_releases_full", base=MongoTask, bind=True)
@@ -152,27 +146,23 @@ async def full_retrieve_press_releases(
     startdate: datetime.datetime, enddate: datetime.datetime
 ):
     result = await fh.get_press_releases(symbol, startdate, enddate)
-    if len(result) == 0 or startdate + dateutil.relativedelta.relativedelta(days=1) >= enddate:
-        return
-    prev_date = enddate
-    enddate = min([res["date"] for res in result])
-    if enddate == prev_date:
-        return
-    await (await self.db).insert_press_releases(fill_name_value(result, "c_id", c_id))
-    await celery_app.send_task("press_releases_full", args=(symbol, c_id, startdate, enddate))
+    if len(result) != 0 and startdate + dateutil.relativedelta.relativedelta(days=1) < enddate:
+        prev_date = enddate
+        enddate = min([res["date"] for res in result])
+        if enddate != prev_date:
+            await (await self.db).insert_press_releases(fill_name_value(result, "c_id", c_id))
+            await celery_app.send_task("press_releases_full", args=(symbol, c_id, startdate, enddate))
 
 
 @celery_app.task(name="splits_full", base=PostgresTask, bind=True)
 async def full_retrieve_splits(self, symbol: str, c_id: int, startdate: datetime.datetime, enddate: datetime.datetime):
     result = await fh.get_splits(symbol, startdate, enddate)
-    if len(result) == 0 or startdate + dateutil.relativedelta.relativedelta(days=1) >= enddate:
-        return
-    prev_date = enddate
-    enddate = min([res["date"] for res in result])
-    if enddate == prev_date:
-        return
-    await (await self.db).insert_splits(fill_name_value(result, "c_id", c_id))
-    await celery_app.send_task("splits_full", args=(symbol, c_id, startdate, enddate))
+    if len(result) != 0 and startdate + dateutil.relativedelta.relativedelta(days=1) < enddate:
+        prev_date = enddate
+        enddate = min([res["date"] for res in result])
+        if enddate != prev_date:
+            await (await self.db).insert_splits(fill_name_value(result, "c_id", c_id))
+            await celery_app.send_task("splits_full", args=(symbol, c_id, startdate, enddate))
 
 
 @celery_app.task(name="trends_full", base=PostgresTask, bind=True)
@@ -209,14 +199,12 @@ async def full_retrieve_upgrades_downgrades(
     startdate: datetime.datetime, enddate: datetime.datetime
 ):
     result = await fh.get_upgrades_downgrades(symbol, startdate, enddate)
-    if len(result) == 0 or startdate + dateutil.relativedelta.relativedelta(days=1) >= enddate:
-        return
-    prev_date = enddate
-    enddate = min([res["date"] for res in result])
-    if enddate == prev_date:
-        return
-    await (await self.db).insert_upgrades_downgrades(fill_name_value(result, "c_id", c_id))
-    await celery_app.send_task("upgrades_downgrades_full", args=(symbol, c_id, startdate, enddate))
+    if len(result) != 0 and startdate + dateutil.relativedelta.relativedelta(days=1) < enddate:
+        prev_date = enddate
+        enddate = min([res["date"] for res in result])
+        if enddate != prev_date:
+            await (await self.db).insert_upgrades_downgrades(fill_name_value(result, "c_id", c_id))
+            await celery_app.send_task("upgrades_downgrades_full", args=(symbol, c_id, startdate, enddate))
 
 
 @celery_app.task(name="earnings_calendars_full", base=PostgresTask, bind=True)
@@ -225,14 +213,12 @@ async def full_retrieve_earnings_calendars(
     startdate: datetime.datetime, enddate: datetime.datetime
 ):
     result = await fh.get_earnings_calendars(symbol, startdate, enddate)
-    if len(result) == 0 or startdate + dateutil.relativedelta.relativedelta(days=1) >= enddate:
-        return
-    prev_date = enddate
-    enddate = min([res["date"] for res in result])
-    if enddate == prev_date:
-        return
-    await (await self.db).insert_earnings_calendars(fill_name_value(result, "c_id", c_id))
-    await celery_app.send_task("earnings_calendars_full", args=(symbol, c_id, startdate, enddate))
+    if len(result) != 0 and startdate + dateutil.relativedelta.relativedelta(days=1) < enddate:
+        prev_date = enddate
+        enddate = min([res["date"] for res in result])
+        if enddate != prev_date:
+            await (await self.db).insert_earnings_calendars(fill_name_value(result, "c_id", c_id))
+            await celery_app.send_task("earnings_calendars_full", args=(symbol, c_id, startdate, enddate))
 
 
 @celery_app.task(name="crypto_candles_full", base=PostgresTask, bind=True)
