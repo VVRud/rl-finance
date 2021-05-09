@@ -84,7 +84,7 @@ services:
     depends_on:
       - redis
       - mongo
-      - bouncer
+      - postgres
     restart: always
     
   flower:
