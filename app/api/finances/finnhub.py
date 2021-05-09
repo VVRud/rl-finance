@@ -229,11 +229,11 @@ class FinnHub(FinnnhubThrottler):
                         "date": self.__transform_date(chunk.get("acceptedDate", "")),
                         "form": chunk["form"],
                         "access_number": chunk["accessNumber"],
-                        "item1": chunk["item1"],
-                        "item2": chunk["item2"],
-                        "item1A": chunk["Item1A"],
-                        "item7": chunk["item7"],
-                        "item7A": chunk["Item7A"]
+                        "item1": chunk.get("item1", -1),
+                        "item2": chunk.get("item2", -1),
+                        "item1A": chunk.get("Item1A", -1),
+                        "item7": chunk.get("item7", -1),
+                        "item7A": chunk.get("Item7A", -1)
                     } for chunk in data]
         return result
 
