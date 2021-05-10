@@ -111,7 +111,7 @@ async def add_crypto_symbol(
 
 @router.get(
     "/get_crypto",
-    summary="Get single company profile.",
+    summary="Get single cpypto profile.",
     tags=["cryptos"]
 )
 async def get_crypto(

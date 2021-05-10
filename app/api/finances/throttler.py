@@ -80,7 +80,7 @@ class BasicThrottler():
 
 class FinnnhubThrottler(BasicThrottler):
     def __init__(self, limits: List[Limit]):
-        self.session = aiohttp.ClientSession()
+        self.session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10 * 60))
         super(FinnnhubThrottler, self).__init__(limits)
 
     async def make_request(self, *args, **kwargs):
@@ -89,9 +89,7 @@ class FinnnhubThrottler(BasicThrottler):
 
             try:
                 resp = await self.session.request(*args, **kwargs)
-            except aiohttp.ClientOSError:
-                resp = None
-            except asyncio.TimeoutError:
+            except (aiohttp.ClientOSError, asyncio.TimeoutError):
                 resp = None
 
             if resp is not None and resp.ok:

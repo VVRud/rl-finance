@@ -40,7 +40,7 @@ class Finimize(FinimizeThrottler):
         response["chapters"][chapter] = self._clean_blocks(response["chapters"][chapter])
         return response
 
-    def _clean_blocks(self, response):
+    def __clean_blocks(self, response):
         rm_blocks = [i for i in range(len(response["blocks"])) if response["blocks"][i]["__typename"] == "ImageBlock"]
         for block_idx in rm_blocks[::-1]:
             del response["blocks"][block_idx]
@@ -88,7 +88,7 @@ class Finimize(FinimizeThrottler):
             if part in response:
                 del response[part]
 
-        response = self._clean_blocks(response)
+        response = self.__clean_blocks(response)
 
         related_contents = response.pop("relatedContentPieces")
         related_ids = [related["id"] for related in related_contents]

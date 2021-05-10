@@ -293,7 +293,10 @@ class FinnHub(FinnnhubThrottler):
             "token": self.apikey
         }
         async with await self.make_request("GET", self.url + path, params=params) as response:
-            result = await response.json()
+            try:
+                result = await response.json()
+            except Exception:
+                result = {"s": "error"}
         if result["s"] == "ok" and result["t"] is not None:
             result = [
                 {
