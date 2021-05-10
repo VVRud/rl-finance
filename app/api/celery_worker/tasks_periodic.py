@@ -32,8 +32,7 @@ async def update_daily(self):
         await celery_app.send_task("company_news_latest", args=(company["symbol"], company["id"]), priority=10)
         for resolution in ["1", "5", "15", "30", "60", "D"]:
             await celery_app.send_task(
-                "stock_candles_latest", args=(company["symbol"], company["id"], resolution),
-                priority=10
+                "stock_candles_latest", args=(company["symbol"], company["id"], resolution), priority=10
             )
 
     cryptos = await (await self.db).get_cryptos()
