@@ -27,28 +27,28 @@ async def add_company_parsing_tasks(symbol: str, c_id: int, ipo: datetime.dateti
             "stock_candles_full", args=(symbol, c_id, resolution, startdate, enddate), priority=priority
         )
 
-    await celery_app.send_task("sentiments_full", args=(symbol, c_id, startdate, enddate))
-    await celery_app.send_task("dividends_full", args=(symbol, c_id, startdate, enddate))
-    await celery_app.send_task("splits_full", args=(symbol, c_id, startdate, enddate))
-    await celery_app.send_task("upgrades_downgrades_full", args=(symbol, c_id, startdate, enddate))
-    await celery_app.send_task("earnings_calendars_full", args=(symbol, c_id, startdate, enddate))
+    await celery_app.send_task("sentiments_full", args=(symbol, c_id, startdate, enddate), priority=5)
+    await celery_app.send_task("dividends_full", args=(symbol, c_id, startdate, enddate), priority=5)
+    await celery_app.send_task("splits_full", args=(symbol, c_id, startdate, enddate), priority=5)
+    await celery_app.send_task("upgrades_downgrades_full", args=(symbol, c_id, startdate, enddate), priority=5)
+    await celery_app.send_task("earnings_calendars_full", args=(symbol, c_id, startdate, enddate), priority=5)
 
-    await celery_app.send_task("balance_sheets_full", args=(symbol, c_id))
-    await celery_app.send_task("cash_flows_full", args=(symbol, c_id))
-    await celery_app.send_task("income_statements_full", args=(symbol, c_id))
-    await celery_app.send_task("similarities_full", args=(symbol, c_id))
-    await celery_app.send_task("trends_full", args=(symbol, c_id))
-    await celery_app.send_task("eps_surprises_full", args=(symbol, c_id))
-    await celery_app.send_task("eps_estimates_full", args=(symbol, c_id))
-    await celery_app.send_task("revenue_estimates_full", args=(symbol, c_id))
+    await celery_app.send_task("balance_sheets_full", args=(symbol, c_id), priority=5)
+    await celery_app.send_task("cash_flows_full", args=(symbol, c_id), priority=5)
+    await celery_app.send_task("income_statements_full", args=(symbol, c_id), priority=5)
+    await celery_app.send_task("similarities_full", args=(symbol, c_id), priority=5)
+    await celery_app.send_task("trends_full", args=(symbol, c_id), priority=5)
+    await celery_app.send_task("eps_surprises_full", args=(symbol, c_id), priority=5)
+    await celery_app.send_task("eps_estimates_full", args=(symbol, c_id), priority=5)
+    await celery_app.send_task("revenue_estimates_full", args=(symbol, c_id), priority=5)
 
     # Dealing with news and press releases
     enddate = datetime.datetime.now()
     startdate = enddate - dateutil.relativedelta.relativedelta(years=HORIZON_YEARS_NEWS_RELEASES)
     if ipo is not None:
         startdate = max(startdate, ipo)
-    await celery_app.send_task("company_news_full", args=(symbol, c_id, startdate, enddate))
-    await celery_app.send_task("press_releases_full", args=(symbol, c_id, startdate, enddate))
+    await celery_app.send_task("company_news_full", args=(symbol, c_id, startdate, enddate), priority=5)
+    await celery_app.send_task("press_releases_full", args=(symbol, c_id, startdate, enddate), priority=5)
 
 
 @celery_app.task(name="stock_candles_full", base=PostgresTask, bind=True)
@@ -57,16 +57,17 @@ async def full_retrieve_stock_candles(
     startdate: datetime.datetime, enddate: datetime.datetime
 ):
     result = await fh.get_stock_candles(symbol, resolution, startdate, enddate)
-    if len(result) == 0 or startdate + dateutil.relativedelta.relativedelta(days=1) >= enddate:
-        return
-    result = fill_name_value(result, "c_id", c_id)
-    result = fill_name_value(result, "resolution", resolution)
-    prev_date = enddate
-    enddate = min([res["date"] for res in result])
-    if enddate == prev_date:
-        return
-    await (await self.db).insert_stock_candles(result)
-    await celery_app.send_task("stock_candles_full", args=(symbol, c_id, resolution, startdate, enddate))
+    if len(result) != 0 and startdate + dateutil.relativedelta.relativedelta(days=1) < enddate:
+        prev_date = enddate
+        enddate = min([res["date"] for res in result])
+        if enddate != prev_date:
+            result = fill_name_value(result, "c_id", c_id)
+            result = fill_name_value(result, "resolution", resolution)
+            await (await self.db).insert_stock_candles(result)
+            await celery_app.send_task(
+                "stock_candles_full", args=(symbol, c_id, resolution, startdate, enddate),
+                priority=fh.priorities[fh.resolutions.index(resolution)]
+            )
 
 
 @celery_app.task(name="company_news_full", base=MongoTask, bind=True)
@@ -80,7 +81,7 @@ async def full_retrieve_company_news(
         enddate = min([res["date"] for res in result])
         if enddate != prev_date:
             await (await self.db).insert_company_news(fill_name_value(result, "c_id", c_id))
-            await celery_app.send_task("company_news_full", args=(symbol, c_id, startdate, enddate))
+            await celery_app.send_task("company_news_full", args=(symbol, c_id, startdate, enddate), priority=5)
 
 
 @celery_app.task(name="balance_sheets_full", base=MongoTask, bind=True)
@@ -123,7 +124,7 @@ async def full_retrieve_sentiments(
         enddate = min([res["date"] for res in result])
         if enddate != prev_date:
             await (await self.db).insert_sec_sentiment(fill_name_value(result, "c_id", c_id))
-            await celery_app.send_task("sentiments_full", args=(symbol, c_id, startdate, enddate))
+            await celery_app.send_task("sentiments_full", args=(symbol, c_id, startdate, enddate), priority=5)
 
 
 @celery_app.task(name="dividends_full", base=PostgresTask, bind=True)
@@ -137,7 +138,7 @@ async def full_retrieve_dividends(
         enddate = min([res["date"] for res in result])
         if enddate != prev_date:
             await (await self.db).insert_dividends(fill_name_value(result, "c_id", c_id))
-            await celery_app.send_task("dividends_full", args=(symbol, c_id, startdate, enddate))
+            await celery_app.send_task("dividends_full", args=(symbol, c_id, startdate, enddate), priority=5)
 
 
 @celery_app.task(name="press_releases_full", base=MongoTask, bind=True)
@@ -151,7 +152,7 @@ async def full_retrieve_press_releases(
         enddate = min([res["date"] for res in result])
         if enddate != prev_date:
             await (await self.db).insert_press_releases(fill_name_value(result, "c_id", c_id))
-            await celery_app.send_task("press_releases_full", args=(symbol, c_id, startdate, enddate))
+            await celery_app.send_task("press_releases_full", args=(symbol, c_id, startdate, enddate), priority=5)
 
 
 @celery_app.task(name="splits_full", base=PostgresTask, bind=True)
@@ -162,7 +163,7 @@ async def full_retrieve_splits(self, symbol: str, c_id: int, startdate: datetime
         enddate = min([res["date"] for res in result])
         if enddate != prev_date:
             await (await self.db).insert_splits(fill_name_value(result, "c_id", c_id))
-            await celery_app.send_task("splits_full", args=(symbol, c_id, startdate, enddate))
+            await celery_app.send_task("splits_full", args=(symbol, c_id, startdate, enddate), priority=5)
 
 
 @celery_app.task(name="trends_full", base=PostgresTask, bind=True)
@@ -204,7 +205,7 @@ async def full_retrieve_upgrades_downgrades(
         enddate = min([res["date"] for res in result])
         if enddate != prev_date:
             await (await self.db).insert_upgrades_downgrades(fill_name_value(result, "c_id", c_id))
-            await celery_app.send_task("upgrades_downgrades_full", args=(symbol, c_id, startdate, enddate))
+            await celery_app.send_task("upgrades_downgrades_full", args=(symbol, c_id, startdate, enddate), priority=5)
 
 
 @celery_app.task(name="earnings_calendars_full", base=PostgresTask, bind=True)
@@ -218,7 +219,7 @@ async def full_retrieve_earnings_calendars(
         enddate = min([res["date"] for res in result])
         if enddate != prev_date:
             await (await self.db).insert_earnings_calendars(fill_name_value(result, "c_id", c_id))
-            await celery_app.send_task("earnings_calendars_full", args=(symbol, c_id, startdate, enddate))
+            await celery_app.send_task("earnings_calendars_full", args=(symbol, c_id, startdate, enddate), priority=5)
 
 
 @celery_app.task(name="crypto_candles_full", base=PostgresTask, bind=True)
